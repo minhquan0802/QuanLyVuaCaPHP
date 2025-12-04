@@ -1,6 +1,6 @@
 import Header from "../components/header"
 import Footer from "../components/footer"
-import { useState, useEffect, useRef } from "react" // Thêm useRef
+import { useState, useEffect, useRef } from "react"
 import { useNavigate } from "react-router-dom"
 
 export default function Checkout() {
@@ -9,17 +9,76 @@ export default function Checkout() {
     const [cartItems, setCartItems] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     
+    // 1. THÊM STATE ĐỂ QUẢN LÝ THÔNG TIN FORM
+    const [formData, setFormData] = useState({
+        fullName: "",
+        phone: "",
+        address: "",
+        note: ""
+    });
+
     // Tạo Ref để điều khiển form ẩn
     const momoFormRef = useRef(null);
 
-    // Load dữ liệu giỏ hàng từ LocalStorage
+    // Load dữ liệu giỏ hàng và NGƯỜI DÙNG từ LocalStorage/API
     useEffect(() => {
+        // A. Load giỏ hàng
         const savedCart = localStorage.getItem('cart');
         if (savedCart) {
             setCartItems(JSON.parse(savedCart));
         }
+
+        // B. Load thông tin người dùng
+        const fetchUserInfo = async () => {
+            const userId = localStorage.getItem("user_id");
+            
+            // Nếu đã đăng nhập (có user_id)
+            if (userId) {
+                try {
+                    // Gọi API lấy chi tiết người dùng
+                    const response = await fetch(`http://127.0.0.1:8000/api/nguoi-dung/${userId}`);
+                    const result = await response.json();
+
+                    if (result.success && result.data) {
+                        const user = result.data;
+                        // Cập nhật State với dữ liệu từ API
+                        setFormData(prev => ({
+                            ...prev,
+                            fullName: user.ho_ten || "",
+                            phone: user.so_dien_thoai || "",
+                            address: user.dia_chi || ""
+                            // Note giữ nguyên hoặc để trống
+                        }));
+                    }
+                } catch (error) {
+                    console.error("Lỗi khi lấy thông tin user:", error);
+                    // Fallback: Nếu API lỗi, thử lấy từ localStorage 'currentUser' nếu có
+                    const savedUser = localStorage.getItem("currentUser");
+                    if (savedUser) {
+                        const user = JSON.parse(savedUser);
+                        setFormData(prev => ({
+                            ...prev,
+                            fullName: user.ho_ten || "",
+                            phone: user.so_dien_thoai || "", // Lưu ý key này phải khớp lúc login lưu
+                            address: user.dia_chi || ""
+                        }));
+                    }
+                }
+            }
+        };
+
+        fetchUserInfo();
         setIsLoading(false);
     }, []);
+
+    // 2. HÀM XỬ LÝ KHI NGƯỜI DÙNG NHẬP LIỆU (CHO PHÉP SỬA LẠI THÔNG TIN ĐÃ LOAD)
+    const handleInputChange = (e) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({
+            ...prev,
+            [name]: value
+        }));
+    };
 
     // Tính toán tiền
     const subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
@@ -27,9 +86,15 @@ export default function Checkout() {
     const total = subtotal + shipping;
 
     // Xử lý đặt hàng
-    const handlePlaceOrder = () => {
+    const handlePlaceOrder = async () => {
         if (cartItems.length === 0) {
             alert("Giỏ hàng đang trống!");
+            return;
+        }
+
+        // Validate form cơ bản
+        if (!formData.fullName || !formData.phone || !formData.address) {
+            alert("Vui lòng điền đầy đủ thông tin nhận hàng!");
             return;
         }
 
@@ -38,7 +103,7 @@ export default function Checkout() {
             const confirmPayment = window.confirm(`Xác nhận thanh toán ${total.toLocaleString('vi-VN')}đ qua MoMo?`);
             if (!confirmPayment) return;
 
-            // Xóa giỏ hàng trước khi chuyển hướng (Hoặc bạn có thể xử lý xóa sau khi thanh toán thành công)
+            // Xóa giỏ hàng trước khi chuyển hướng 
             localStorage.removeItem('cart');
             window.dispatchEvent(new Event('storage'));
 
@@ -50,13 +115,62 @@ export default function Checkout() {
         }
 
         // --- TRƯỜNG HỢP 2: THANH TOÁN COD (Mặc định) ---
-        localStorage.removeItem('cart');
-        alert("Đặt hàng thành công! Cảm ơn bạn đã mua sắm tại Minh Mạnh Quân Fresh.");
-        navigate('/home');
-        window.dispatchEvent(new Event('storage'));
+        // Gọi API tạo đơn hàng
+        setIsLoading(true);
+        try {
+            const userId = localStorage.getItem("user_id");
+
+            // Chuẩn bị payload theo đúng format API yêu cầu
+            const orderPayload = {
+                ma_nguoi_dung: userId ? parseInt(userId) : null, // Nếu user chưa login có thể gửi null (tùy backend xử lý)
+                dia_chi_giao_hang: formData.address,
+                ghi_chu: formData.note,
+                chi_tiet: cartItems.map(item => ({
+                    ma_san_pham: item.id,
+                    so_luong: item.quantity
+                }))
+            };
+
+            const response = await fetch('http://127.0.0.1:8000/api/don-hang', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                },
+                body: JSON.stringify(orderPayload)
+            });
+
+            const result = await response.json();
+
+            // Kiểm tra kết quả (giả định API trả về success: true hoặc HTTP 200/201)
+            if (response.ok) {
+                console.log("Order created:", result);
+                
+                // Xóa giỏ hàng sau khi đặt thành công
+                localStorage.removeItem('cart');
+                
+                // Phát sự kiện để Header cập nhật lại số lượng giỏ hàng về 0
+                window.dispatchEvent(new Event('storage'));
+                
+                alert(`Đặt hàng thành công! Cảm ơn ${formData.fullName} đã mua sắm.`);
+                navigate('/home');
+            } else {
+                // Xử lý lỗi từ backend trả về
+                alert(result.message || "Có lỗi xảy ra khi tạo đơn hàng. Vui lòng thử lại.");
+            }
+        } catch (error) {
+            console.error("Order Error:", error);
+            alert("Không thể kết nối đến máy chủ. Vui lòng kiểm tra lại đường truyền.");
+        } finally {
+            setIsLoading(false);
+        }
     };
 
-    if (isLoading) return null;
+    if (isLoading) return (
+        <div className="min-h-screen flex items-center justify-center bg-slate-50">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        </div>
+    );
 
     // Nếu giỏ hàng trống...
     if (cartItems.length === 0) {
@@ -113,6 +227,9 @@ export default function Checkout() {
                                     <div className="space-y-2">
                                         <label className="text-sm font-bold text-slate-700">Họ và tên <span className="text-red-500">*</span></label>
                                         <input
+                                            name="fullName"
+                                            value={formData.fullName}
+                                            onChange={handleInputChange}
                                             className="w-full h-12 px-4 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all placeholder:text-slate-400"
                                             placeholder="Nguyễn Văn A"
                                         />
@@ -120,6 +237,9 @@ export default function Checkout() {
                                     <div className="space-y-2">
                                         <label className="text-sm font-bold text-slate-700">Số điện thoại <span className="text-red-500">*</span></label>
                                         <input
+                                            name="phone"
+                                            value={formData.phone}
+                                            onChange={handleInputChange}
                                             className="w-full h-12 px-4 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all placeholder:text-slate-400"
                                             placeholder="09xxxxxxxx"
                                         />
@@ -127,6 +247,9 @@ export default function Checkout() {
                                     <div className="space-y-2 md:col-span-2">
                                         <label className="text-sm font-bold text-slate-700">Địa chỉ giao hàng <span className="text-red-500">*</span></label>
                                         <input
+                                            name="address"
+                                            value={formData.address}
+                                            onChange={handleInputChange}
                                             className="w-full h-12 px-4 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all placeholder:text-slate-400"
                                             placeholder="Số nhà, tên đường, phường/xã, quận/huyện, tỉnh/thành phố"
                                         />
@@ -134,6 +257,9 @@ export default function Checkout() {
                                     <div className="space-y-2 md:col-span-2">
                                         <label className="text-sm font-bold text-slate-700">Ghi chú (Tùy chọn)</label>
                                         <textarea
+                                            name="note"
+                                            value={formData.note}
+                                            onChange={handleInputChange}
                                             className="w-full p-4 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all resize-none h-24 placeholder:text-slate-400"
                                             placeholder="Ví dụ: Giao hàng vào giờ hành chính..."
                                         />
@@ -260,17 +386,23 @@ export default function Checkout() {
                                 </div>
 
                                 {/* Place Order Button */}
-                                <button 
+                                <button
                                     onClick={handlePlaceOrder}
+                                    disabled={isLoading}
                                     className={`w-full mt-8 py-4 rounded-xl text-white font-bold shadow-lg transition-all duration-300 flex items-center justify-center gap-2 hover:-translate-y-0.5
-                                        ${paymentMethod === 'wallet' 
-                                            ? 'bg-pink-600 hover:bg-pink-700 shadow-pink-200 hover:shadow-pink-300' 
+                                        ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}
+                                        ${paymentMethod === 'wallet'
+                                            ? 'bg-pink-600 hover:bg-pink-700 shadow-pink-200 hover:shadow-pink-300'
                                             : 'bg-blue-600 hover:bg-blue-700 shadow-blue-200 hover:shadow-blue-300'
                                         }`}
                                 >
-                                    <span className="material-symbols-outlined">
-                                        {paymentMethod === 'wallet' ? 'qr_code_2' : 'lock'}
-                                    </span>
+                                    {isLoading ? (
+                                        <span className="block w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                                    ) : (
+                                        <span className="material-symbols-outlined">
+                                            {paymentMethod === 'wallet' ? 'qr_code_2' : 'lock'}
+                                        </span>
+                                    )}
                                     {paymentMethod === 'wallet' ? "Thanh toán qua MoMo" : "Đặt Hàng Ngay"}
                                 </button>
 
@@ -286,20 +418,19 @@ export default function Checkout() {
             <Footer />
 
             {/* --- FORM ẨN ĐỂ SUBMIT SANG LARAVEL/MOMO --- */}
-            {/* Form này sẽ mô phỏng hành động submit form HTML thuần túy */}
-            <form 
-                ref={momoFormRef} 
-                action="http://127.0.0.1:8000/api/momo_payment" 
-                method="POST" 
+            <form
+                ref={momoFormRef}
+                action="http://127.0.0.1:8000/api/momo_payment"
+                method="POST"
                 className="hidden"
             >
                 {/* Truyền các tham số cần thiết sang Controller */}
-                {/* Lưu ý: name="total_momo" phải khớp với $request->total_momo bên Laravel nếu bạn sửa lại controller */}
-                {/* Nếu Controller cũ vẫn dùng hardcode $amount = 10000 thì giá trị này gửi đi chưa có tác dụng, bạn cần sửa controller để nhận */}
                 <input type="hidden" name="total_momo" value={total} />
-                
-                {/* Thêm input này để giống form mẫu của bạn, phòng khi backend check */}
                 <input type="hidden" name="payUrl" value="Thanh toán MOMO" />
+                
+                {/* Có thể bạn cần truyền thêm thông tin người nhận sang MoMo/Backend nếu cần lưu ở đó */}
+                <input type="hidden" name="customer_name" value={formData.fullName} />
+                <input type="hidden" name="customer_phone" value={formData.phone} />
             </form>
 
         </div>
