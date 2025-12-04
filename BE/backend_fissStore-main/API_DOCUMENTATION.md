@@ -78,7 +78,8 @@ GET /api/san-pham?ma_danh_muc=1&hien_thi=1&search=tôm
     "email": "nguyenvana@example.com",
     "mat_khau": "password123",
     "so_dien_thoai": "0901234567",
-    "dia_chi": "123 Đường ABC, Quận 1, TP.HCM"
+    "dia_chi": "123 Đường ABC, Quận 1, TP.HCM",
+    "role": "customer"
 }
 ```
 
@@ -90,8 +91,10 @@ GET /api/san-pham?ma_danh_muc=1&hien_thi=1&search=tôm
     "email": "nguyen@example.com",
     "mat_khau": "newpassword123",
     "so_dien_thoai": "0912345678",
-    "dia_chi": "Địa chỉ mới"
+    "dia_chi": "Địa chỉ mới",
+    "role": "admin"
 }
+
 ```
 
 ---

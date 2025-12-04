@@ -6,6 +6,7 @@ use App\Models\NguoiDung;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Validator;
 
 class NguoiDungController extends Controller
 {
@@ -15,7 +16,7 @@ class NguoiDungController extends Controller
     public function index(): JsonResponse
     {
         $nguoiDungs = NguoiDung::all();
-        
+
         return response()->json([
             'success' => true,
             'data' => $nguoiDungs
@@ -33,10 +34,13 @@ class NguoiDungController extends Controller
             'mat_khau' => 'required|string|min:6',
             'so_dien_thoai' => 'nullable|string|max:20',
             'dia_chi' => 'nullable|string',
+            'role' => 'nullable|in:admin,customer',
         ]);
 
         $validated['mat_khau'] = Hash::make($validated['mat_khau']);
         $validated['ngay_tao'] = now();
+        $validated['role'] = $validated['role'] ?? 'customer';
+
 
         $nguoiDung = NguoiDung::create($validated);
 
@@ -87,7 +91,9 @@ class NguoiDungController extends Controller
             'mat_khau' => 'sometimes|required|string|min:6',
             'so_dien_thoai' => 'nullable|string|max:20',
             'dia_chi' => 'nullable|string',
+            'role' => 'nullable|in:admin,customer',
         ]);
+
 
         if (isset($validated['mat_khau'])) {
             $validated['mat_khau'] = Hash::make($validated['mat_khau']);
@@ -121,6 +127,37 @@ class NguoiDungController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Xóa người dùng thành công'
+        ]);
+    }
+
+
+    public function login(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email',
+            'mat_khau' => 'required'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Thiếu email hoặc mật khẩu.'
+            ], 400);
+        }
+
+        $user = NguoiDung::where('email', $request->email)->first();
+
+        if (!$user || !Hash::check($request->mat_khau, $user->mat_khau)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Sai email hoặc mật khẩu.'
+            ], 401);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Đăng nhập thành công.',
+            'data' => $user
         ]);
     }
 }

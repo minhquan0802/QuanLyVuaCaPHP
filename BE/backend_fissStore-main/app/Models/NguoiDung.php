@@ -16,6 +16,7 @@ class NguoiDung extends Model
         'so_dien_thoai',
         'dia_chi',
         'ngay_tao',
+        'role', 
     ];
 
     protected $hidden = [

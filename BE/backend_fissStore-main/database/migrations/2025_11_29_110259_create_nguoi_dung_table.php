@@ -19,6 +19,7 @@ return new class extends Migration
             $table->string('so_dien_thoai', 20)->nullable();
             $table->text('dia_chi')->nullable();
             $table->dateTime('ngay_tao');
+            $table->enum('role', ['admin', 'customer'])->default('customer');
             $table->timestamps();
         });
     }
