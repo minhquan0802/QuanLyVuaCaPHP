@@ -10,7 +10,7 @@ import PaymentResult from '../pages/PaymentResult';
 
 // CẬP NHẬT QUAN TRỌNG: Import đúng file Dashboard trong thư mục pages/admin
 import AdminDashboard from '../pages/admin/AdminDashboard'; 
-import QuanLyLoaiCa from '../pages/admin/QuanLyLoaiCa';
+import QuanLySanPham from '../pages/admin/QuanLySanPham';
 import QuanLyTaiKhoan from '../pages/admin/QuanLyTaiKhoan';
 import QuanLyDonHang from '../pages/admin/QuanLyDonHang';
 
@@ -34,7 +34,7 @@ export default function AppRoutes() {
             
             {/* Admin Routes */}
             <Route path='/admin' element={<AdminDashboard />} />
-            <Route path='/admin/QuanLyLoaiCa' element={<QuanLyLoaiCa />} />
+            <Route path='/admin/QuanLySanPham' element={<QuanLySanPham />} />
             <Route path='/admin/QuanLyTaiKhoan' element={<QuanLyTaiKhoan />} />
             <Route path='/admin/QuanLyDonHang' element={<QuanLyDonHang />} />
             
