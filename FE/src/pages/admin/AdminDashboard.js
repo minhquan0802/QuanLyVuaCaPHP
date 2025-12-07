@@ -1,7 +1,11 @@
 import AdminLayout from "../../components/admin/AdminLayout";
+import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 
 export default function AdminDashboard() {
+
+        const navigate = useNavigate();
+
     const [stats, setStats] = useState({
         totalOrders: 0,
         revenue: 0,
@@ -135,7 +139,10 @@ export default function AdminDashboard() {
                         <span className="material-symbols-outlined text-blue-600">new_releases</span>
                         Đơn Hàng Mới Nhất
                     </h3>
-                    <button className="text-sm text-blue-600 font-bold hover:underline">Xem tất cả</button>
+                    <button
+                    onClick={() => navigate('/admin/QuanLyDonHang')}
+                     className="text-sm text-blue-600 font-bold hover:underline">Xem tất cả
+                     </button>
                 </div>
 
                 <div className="overflow-x-auto">

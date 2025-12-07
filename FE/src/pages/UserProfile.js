@@ -54,7 +54,7 @@ export default function UserProfile() {
     const handleLogout = () => {
         // Xóa thông tin đăng nhập và giỏ hàng
         localStorage.removeItem('user_id');
-        localStorage.removeItem('token'); // Nếu có dùng token
+        localStorage.removeItem('currentUser');
         localStorage.removeItem('cart');  // Tùy chọn: xóa giỏ hàng khi đăng xuất
         
         // Dispatch sự kiện để Header cập nhật lại giao diện (nếu Header có lắng nghe)

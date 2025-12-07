@@ -7,9 +7,10 @@ export default function AdminSidebar() {
     // Danh sách menu theo yêu cầu của bạn
     const menuItems = [
         { icon: "dashboard", label: "Dashboard", path: "/admin" },
-        { icon: "set_meal", label: "Quản lý Loại Cá", path: "/admin/QuanLyLoaiCa" },
+        { icon: "set_meal", label: "Quản lý sản phẩm", path: "/admin/QuanLySanPham" },
         { icon: "manage_accounts", label: "Quản lý Tài Khoản", path: "/admin/QuanLyTaiKhoan" },
         { icon: "receipt_long", label: "Quản lý Đơn Hàng", path: "/admin/QuanLyDonHang" },
+        { icon: "category", label: "Quản lý Danh Mục", path: "/admin/QuanLyDanhMuc" },
     ];
 
     const isActive = (path) => {
@@ -21,6 +22,7 @@ export default function AdminSidebar() {
     const handleLogout = () => {
         // Xóa thông tin đăng nhập và chuyển về trang login
         localStorage.removeItem("currentUser");
+        localStorage.removeItem("user_id");
         navigate('/');
     }
 

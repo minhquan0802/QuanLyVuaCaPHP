@@ -4,6 +4,12 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\MomoTransaction; // Nhớ import Model
 use Illuminate\Support\Facades\Log;
+
+//Luu don hang
+use App\Models\DonHang;
+use App\Models\ChiTietDonHang;
+use App\Models\SanPham;
+use Illuminate\Support\Facades\DB;
 class CheckoutController extends Controller
 {
     // public function momo_payment(Request $request)
@@ -118,20 +124,27 @@ class CheckoutController extends Controller
         $total = $request->input('total_momo');
         $amount = $total ? (string)$total : "10000";
 
+        // Lấy input có name="order_info_momo" từ form React
+        $infoFromFe = $request->input('order_info_momo');
+    
+        // Nếu có dữ liệu thì dùng, không thì dùng text mặc định
+        $orderInfoFromFE = $infoFromFe ? (string)$infoFromFe : "Thanh toán đơn hàng Minh Quân Fresh";
+
+
         // ... Các thông số config giữ nguyên ...
         $endpoint = "https://test-payment.momo.vn/v2/gateway/api/create";
         $partnerCode = 'MOMOBKUN20180529';
         $accessKey = 'klm05TvNBzhg7h7j';
         $secretKey = 'at67qH6mk8w5Y1nAyMoYKMWACiEi2bsa';
-        $orderInfo = "Thanh toán đơn hàng";
+        $orderInfo = $orderInfoFromFE;
         $orderId = time() . "";
         
         // Sửa redirectUrl về trang Localhost React của bạn để sau khi thanh toán xong nó quay về đúng chỗ
-        $redirectUrl = "http://localhost:3000/home"; 
+        $redirectUrl = "http://localhost:3000/payment-result"; 
         $ipnUrl = "http://localhost:3000/home";
         $extraData = "";
         $requestId = time() . "";
-        $requestType = "payWithATM";
+        $requestType = "payWithMethod"; //payWithATM, captureWallet
         
         $rawHash = "accessKey=" . $accessKey . "&amount=" . $amount . "&extraData=" . $extraData . "&ipnUrl=" . $ipnUrl . "&orderId=" . $orderId . "&orderInfo=" . $orderInfo . "&partnerCode=" . $partnerCode . "&redirectUrl=" . $redirectUrl . "&requestId=" . $requestId . "&requestType=" . $requestType;
         $signature = hash_hmac("sha256", $rawHash, $secretKey);
@@ -167,52 +180,62 @@ class CheckoutController extends Controller
 
 
     public function saveTransaction(Request $request)
-{
-    try {
-        // Log lại dữ liệu nhận được để debug (xem trong storage/logs/laravel.log)
-        Log::info('MoMo Return Data:', $request->all());
+    {
+        DB::beginTransaction();
+        try {
+            // 1. Lưu lịch sử giao dịch MoMo
+            MomoTransaction::create([
+                'partner_code'  => $request->partnerCode,
+                'order_id'      => $request->orderId,
+                'request_id'    => $request->requestId,
+                'amount'        => $request->amount,
+                'order_info'    => $request->orderInfo,
+                'order_type'    => $request->orderType,
+                'trans_id'      => $request->transId,
+                'result_code'   => $request->resultCode,
+                'message'       => $request->message,
+                'pay_type'      => $request->payType,
+                'response_time' => $request->responseTime,
+                'extra_data'    => $request->extraData,
+                'signature'     => $request->signature,
+            ]);
 
-        // 1. Kiểm tra xem giao dịch này đã lưu chưa (tránh trùng lặp khi F5)
-        // Tìm theo order_id (Mã đơn hàng của bạn)
-        $existing = MomoTransaction::where('order_id', $request->orderId)->first();
+            // 2. Nếu thanh toán thành công (resultCode = 0), tiến hành tạo Đơn Hàng
+            if ($request->resultCode == 0) {
 
-        if ($existing) {
-            return response()->json(['message' => 'Giao dịch đã tồn tại'], 200);
+                // Lấy dữ liệu đơn hàng từ React gửi kèm (nằm trong body request)
+                $orderData = $request->input('order_data');
+
+                // --- A. Tạo Đơn Hàng ---
+                $donHang = DonHang::create([
+                    'ma_nguoi_dung'     => $orderData['ma_nguoi_dung'],
+                    'ngay_dat'          => now(),
+                    'tong_tien'         => $request->amount, // Lấy số tiền thực tế đã thanh toán qua MoMo
+                    'trang_thai'        => 'processing', // Đã thanh toán -> Đang đóng gói
+                    'dia_chi_giao_hang' => $orderData['dia_chi_giao_hang'],
+                    'ghi_chu'           => $orderData['ghi_chu'] . " (Đã thanh toán MoMo: " . $request->transId . ")",
+                ]);
+
+                // --- B. Tạo Chi Tiết ---
+                foreach ($orderData['chi_tiet'] as $item) {
+                    // Lấy giá gốc từ DB để an toàn (hoặc lấy từ request nếu bạn chấp nhận rủi ro)
+                    $sanPham = SanPham::find($item['ma_san_pham']);
+
+                    ChiTietDonHang::create([
+                        'ma_don_hang' => $donHang->ma_don_hang,
+                        'ma_san_pham' => $item['ma_san_pham'],
+                        'so_luong'    => $item['so_luong'],
+                        'gia_mua'     => $sanPham ? $sanPham->gia_ban : 0,
+                    ]);
+                }
+            }
+
+            DB::commit();
+            return response()->json(['message' => 'Lưu đơn hàng thành công'], 200);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Lỗi lưu MoMo/Order: ' . $e->getMessage());
+            return response()->json(['message' => 'Lỗi: ' . $e->getMessage()], 500);
         }
-
-        // 2. Lưu vào Database
-        // Lưu ý: Mapping từ param URL (camelCase) sang cột DB (snake_case)
-        MomoTransaction::create([
-            'partner_code'  => $request->partnerCode,
-            'order_id'      => $request->orderId,
-            'request_id'    => $request->requestId,
-            'amount'        => $request->amount,
-            'order_info'    => $request->orderInfo,
-            'order_type'    => $request->orderType,
-            'trans_id'      => $request->transId,
-            'result_code'   => $request->resultCode,
-            'message'       => $request->message,
-            'pay_type'      => $request->payType,
-            'response_time' => $request->responseTime,
-            'extra_data'    => $request->extraData,
-            'signature'     => $request->signature,
-        ]);
-
-        // 3. (Tùy chọn) Cập nhật trạng thái đơn hàng chính
-        // Ví dụ: Tìm bảng Orders và update status = 'paid'
-        if ($request->resultCode == 0) {
-            // $order = Order::where('id', $request->orderId)->first();
-            // if ($order) {
-            //     $order->status = 'success';
-            //     $order->save();
-            // }
-        }
-
-        return response()->json(['message' => 'Lưu thành công'], 200);
-
-    } catch (\Exception $e) {
-        Log::error('Lỗi lưu transaction: ' . $e->getMessage());
-        return response()->json(['message' => 'Lỗi server: ' . $e->getMessage()], 500);
     }
-}
 }

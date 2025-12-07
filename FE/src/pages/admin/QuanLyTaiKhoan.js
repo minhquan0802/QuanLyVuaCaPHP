@@ -5,7 +5,7 @@ export default function QuanLyTaiKhoan() {
     const [accounts, setAccounts] = useState([]);
     const [loading, setLoading] = useState(true);
     
-    // Cấu hình danh sách vai trò (Mapping theo string role của Laravel)
+    // Cấu hình danh sách vai trò
     const roles = [
         { value: "admin", label: "Quản trị viên (Admin)" },
         { value: "staff", label: "Nhân viên" },
@@ -26,7 +26,7 @@ export default function QuanLyTaiKhoan() {
             
             const data = await res.json();
             
-            // Xử lý dữ liệu trả về (Laravel thường trả về { data: [...] } hoặc mảng trực tiếp)
+            // Xử lý dữ liệu trả về linh hoạt
             let realData = [];
             if (data.data && Array.isArray(data.data)) {
                 realData = data.data;
@@ -52,16 +52,15 @@ export default function QuanLyTaiKhoan() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     
-    // State form (Field names khớp với database/Laravel)
+    // State form: Đã bỏ trường 'trang_thai'
     const [currentUser, setCurrentUser] = useState({
         ma_nguoi_dung: "",
         ho_ten: "",
         email: "",
-        mat_khau: "", // Lưu ý: Laravel thường dùng password hoặc mat_khau
+        mat_khau: "",
         so_dien_thoai: "",
         dia_chi: "",
-        role: "customer", 
-        trang_thai: "active" // active / inactive
+        role: "customer"
     });
 
     const handleAddNew = () => {
@@ -73,8 +72,7 @@ export default function QuanLyTaiKhoan() {
             mat_khau: "",
             so_dien_thoai: "",
             dia_chi: "",
-            role: "customer",
-            trang_thai: "active"
+            role: "customer"
         });
         setIsModalOpen(true);
     };
@@ -83,14 +81,13 @@ export default function QuanLyTaiKhoan() {
         setIsEditing(true);
         setCurrentUser({
             ...user,
-            mat_khau: "" // Không hiển thị mật khẩu cũ, để trống nếu không muốn đổi
+            mat_khau: "" // Để trống khi edit
         });
         setIsModalOpen(true);
     };
 
     // --- 3. CRUD Actions ---
     
-    // XÓA TÀI KHOẢN
     const handleDelete = async (id) => {
         if (window.confirm("Bạn có chắc chắn muốn xóa tài khoản này?")) {
             try {
@@ -102,7 +99,6 @@ export default function QuanLyTaiKhoan() {
                     throw new Error("Lỗi khi xóa từ server");
                 }
                 
-                // Cập nhật lại danh sách trên giao diện
                 setAccounts(accounts.filter(item => item.ma_nguoi_dung !== id));
                 alert("Đã xóa thành công!");
             } catch (error) {
@@ -112,21 +108,18 @@ export default function QuanLyTaiKhoan() {
         }
     };
 
-    // THÊM MỚI HOẶC CẬP NHẬT
     const handleSubmit = async (e) => {
         e.preventDefault();
         
-        // Chuẩn bị payload
+        // Payload: Đã bỏ 'trang_thai'
         const payload = {
             ho_ten: currentUser.ho_ten,
             email: currentUser.email,
             so_dien_thoai: currentUser.so_dien_thoai,
             dia_chi: currentUser.dia_chi,
-            role: currentUser.role,
-            trang_thai: currentUser.trang_thai
+            role: currentUser.role
         };
 
-        // Chỉ gửi mật khẩu nếu đang thêm mới hoặc người dùng nhập mật khẩu mới khi sửa
         if (!isEditing || currentUser.mat_khau) {
             payload.mat_khau = currentUser.mat_khau;
         }
@@ -155,7 +148,7 @@ export default function QuanLyTaiKhoan() {
 
             alert(isEditing ? "Cập nhật thành công!" : "Thêm mới thành công!");
             setIsModalOpen(false);
-            fetchData(); // Reload lại danh sách
+            fetchData(); 
 
         } catch (error) {
             console.error("Lỗi lưu:", error);
@@ -163,13 +156,11 @@ export default function QuanLyTaiKhoan() {
         }
     };
 
-    // Helper: Lấy tên vai trò hiển thị
     const getRoleLabel = (roleValue) => {
         const role = roles.find(r => r.value === roleValue);
         return role ? role.label : roleValue;
     };
 
-    // Helper: Màu sắc badge theo vai trò
     const getRoleColor = (roleValue) => {
         switch (roleValue) {
             case 'admin': return "bg-purple-100 text-purple-700 border-purple-200";
@@ -194,7 +185,7 @@ export default function QuanLyTaiKhoan() {
                 </button>
             </div>
 
-            {/* Table */}
+            {/* Table: Đã xóa cột Trạng thái */}
             <div className="bg-white rounded-2xl shadow-sm ring-1 ring-slate-200 overflow-hidden">
                 <div className="overflow-x-auto">
                     <table className="w-full text-left">
@@ -203,8 +194,8 @@ export default function QuanLyTaiKhoan() {
                                 <th className="p-4">ID</th>
                                 <th className="p-4">Họ và Tên</th>
                                 <th className="p-4">Email / SĐT</th>
+                                <th className="p-4">Địa chỉ</th>
                                 <th className="p-4">Vai Trò</th>
-                                <th className="p-4">Trạng Thái</th>
                                 <th className="p-4 text-center">Thao tác</th>
                             </tr>
                         </thead>
@@ -224,21 +215,17 @@ export default function QuanLyTaiKhoan() {
                                         <td className="p-4 text-slate-400">#{item.ma_nguoi_dung}</td>
                                         <td className="p-4 font-bold text-blue-900">
                                             {item.ho_ten}
-                                            <div className="text-xs text-slate-400 font-normal mt-0.5 truncate max-w-[200px]">{item.dia_chi}</div>
                                         </td>
                                         <td className="p-4">
                                             <div className="font-medium">{item.email}</div>
                                             <div className="text-xs text-slate-500">{item.so_dien_thoai || "-"}</div>
                                         </td>
+                                        <td className="p-4 text-slate-600 max-w-[200px] truncate">
+                                            {item.dia_chi || "-"}
+                                        </td>
                                         <td className="p-4">
                                             <span className={`px-2.5 py-1 rounded-md border text-xs font-bold ${getRoleColor(item.role)}`}>
                                                 {getRoleLabel(item.role)}
-                                            </span>
-                                        </td>
-                                        <td className="p-4">
-                                            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border ${item.trang_thai === 'active' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-red-50 text-red-700 border-red-200'}`}>
-                                                <span className={`size-1.5 rounded-full ${item.trang_thai === 'active' ? 'bg-emerald-500' : 'bg-red-500'}`}></span>
-                                                {item.trang_thai === 'active' ? 'Hoạt động' : 'Đã khóa'}
                                             </span>
                                         </td>
                                         <td className="p-4 flex justify-center gap-2">
@@ -263,7 +250,7 @@ export default function QuanLyTaiKhoan() {
                 </div>
             </div>
 
-            {/* Modal Form */}
+            {/* Modal Form: Đã xóa ô chọn Trạng thái */}
             {isModalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 animate-in fade-in duration-200">
                     <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden max-h-[90vh] overflow-y-auto ring-1 ring-slate-900/5">
@@ -340,8 +327,8 @@ export default function QuanLyTaiKhoan() {
                                 />
                             </div>
 
-                            {/* Role & Status */}
-                            <div className="md:col-span-1">
+                            {/* Role (Full width do đã bỏ status) */}
+                            <div className="md:col-span-2">
                                 <label className="label-text">Vai trò</label>
                                 <select 
                                     className="input-field bg-white" 
@@ -351,17 +338,6 @@ export default function QuanLyTaiKhoan() {
                                     {roles.map(role => (
                                         <option key={role.value} value={role.value}>{role.label}</option>
                                     ))}
-                                </select>
-                            </div>
-                            <div className="md:col-span-1">
-                                <label className="label-text">Trạng thái</label>
-                                <select 
-                                    className="input-field bg-white" 
-                                    value={currentUser.trang_thai} 
-                                    onChange={e => setCurrentUser({...currentUser, trang_thai: e.target.value})}
-                                >
-                                    <option value="active">Hoạt động</option>
-                                    <option value="inactive">Khóa / Ngưng hoạt động</option>
                                 </select>
                             </div>
 
@@ -376,7 +352,6 @@ export default function QuanLyTaiKhoan() {
                 </div>
             )}
 
-            {/* CSS-in-JS nhỏ gọn cho input */}
             <style>{`
                 .label-text { display: block; font-size: 0.85rem; font-weight: 600; color: #475569; margin-bottom: 0.35rem; }
                 .input-field { width: 100%; padding: 0.6rem 1rem; border-radius: 0.75rem; border: 1px solid #e2e8f0; outline: none; transition: all 0.2s; font-size: 0.95rem; color: #1e293b; }
