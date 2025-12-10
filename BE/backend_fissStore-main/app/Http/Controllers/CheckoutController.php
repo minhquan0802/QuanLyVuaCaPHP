@@ -238,4 +238,76 @@ class CheckoutController extends Controller
             return response()->json(['message' => 'Lỗi: ' . $e->getMessage()], 500);
         }
     }
+
+    public function vnpay_payment(Request $request)
+    {
+        $vnp_TmnCode = "9WR33BBN"; // Mã website của bạn
+        $vnp_HashSecret = "EV9C0G1079UVL85Q963OPGSOY6BLNTON"; // Chuỗi bí mật
+        $vnp_Url = "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html";
+        // Config đường dẫn trả về (Frontend React)
+        $vnp_Returnurl = "http://localhost:3000"; 
+
+        $vnp_TxnRef = time(); // Mã đơn hàng (duy nhất)
+        
+        // Thông tin đơn hàng
+        // Lấy từ React gửi lên, nếu không có thì lấy mặc định
+        $vnp_OrderInfo = $request->input('order_info') ?? "Thanh toan VNPAY";
+        
+        $vnp_OrderType = "other";
+        
+        // Số tiền (VNPAY yêu cầu nhân 100)
+        // Ví dụ: 10.000 VND -> 1000000
+        $vnp_Amount = $request->input('total_vnpay') * 100; 
+        
+        $vnp_Locale = "vn";
+        
+        // --- KHẮC PHỤC LỖI WEBSITE CHƯA PHÊ DUYỆT ---
+        // Thay vì $request->ip(), ta cứng 127.0.0.1 để Sandbox chấp nhận
+        $vnp_IpAddr = "127.0.0.1"; 
+
+        $inputData = array(
+            "vnp_Version" => "2.1.0",
+            "vnp_TmnCode" => $vnp_TmnCode,
+            "vnp_Amount" => $vnp_Amount,
+            "vnp_Command" => "pay",
+            "vnp_CreateDate" => date('YmdHis'),
+            "vnp_CurrCode" => "VND",
+            "vnp_IpAddr" => $vnp_IpAddr,
+            "vnp_Locale" => $vnp_Locale,
+            "vnp_OrderInfo" => $vnp_OrderInfo,
+            "vnp_OrderType" => $vnp_OrderType,
+            "vnp_ReturnUrl" => $vnp_Returnurl,
+            "vnp_TxnRef" => $vnp_TxnRef,
+        );
+
+        // Sắp xếp dữ liệu để tạo chữ ký (Bắt buộc của VNPAY)
+        ksort($inputData);
+        $query = "";
+        $i = 0;
+        $hashdata = "";
+        foreach ($inputData as $key => $value) {
+            if ($i == 1) {
+                $hashdata .= '&' . urlencode($key) . "=" . urlencode($value);
+            } else {
+                $hashdata .= urlencode($key) . "=" . urlencode($value);
+                $i = 1;
+            }
+            $query .= urlencode($key) . "=" . urlencode($value) . '&';
+        }
+
+        // Tạo URL thanh toán
+        $vnp_Url = $vnp_Url . "?" . $query;
+        if (isset($vnp_HashSecret)) {
+            $vnpSecureHash =   hash_hmac('sha512', $hashdata, $vnp_HashSecret);
+            $vnp_Url .= 'vnp_SecureHash=' . $vnpSecureHash;
+        }
+
+        // Trả về URL cho React để chuyển hướng
+        return response()->json([
+            'code' => '00',
+            'message' => 'success',
+            'data' => $vnp_Url
+        ]);
+    }
+
 }

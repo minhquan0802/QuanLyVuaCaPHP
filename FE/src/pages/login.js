@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 
 export default function Login() {
     const navigate = useNavigate();
@@ -159,8 +159,11 @@ export default function Login() {
                                 <input type="checkbox" className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"/>
                                 <span className="group-hover:text-blue-700 transition-colors">Ghi nhớ đăng nhập</span>
                             </label>
-                            <a href="#" className="text-blue-600 hover:text-blue-800 font-semibold transition-colors">Quên mật khẩu?</a>
-                        </div>
+                            {/* Nhớ import Link ở đầu file: import { useNavigate, Link } from "react-router-dom"; */}
+                            <Link to="/forgot-password" className="text-blue-600 hover:text-blue-800 font-semibold transition-colors">
+                                Quên mật khẩu?
+                            </Link>                       
+                            </div>
 
                         <button
                             type="submit"
@@ -176,6 +179,51 @@ export default function Login() {
                             ) : "Đăng nhập ngay"}
                         </button>
                     </form>
+
+
+                    {/* Dang nhap bang GG và FB */}
+                    <div className="mt-6">
+                        <div className="relative">
+                            <div className="absolute inset-0 flex items-center">
+                                <div className="w-full border-t border-slate-200"></div>
+                            </div>
+                            <div className="relative flex justify-center text-sm">
+                                <span className="bg-white px-2 text-slate-500">Hoặc tiếp tục với</span>
+                            </div>
+                        </div>
+
+                        <div className="mt-6 grid grid-cols-2 gap-3">
+                            {/* Nút Google */}
+                            {/* Nút Google */}
+                            <a
+                                href="http://127.0.0.1:8000/auth/google" // Trỏ về Route Laravel vừa tạo
+                                className="flex w-full items-center justify-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-bold text-slate-600 shadow-sm ring-1 ring-slate-200 hover:bg-slate-50 transition-all active:scale-95"
+                            >
+                                <img
+                                    className="h-5 w-5"
+                                    src="https://www.svgrepo.com/show/475656/google-color.svg"
+                                    alt="Google"
+                                />
+                                Google
+                            </a>
+
+                            {/* Nút Facebook */}
+                            <button
+                                type="button"
+                                className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#1877F2] px-4 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-[#1864cc] transition-all active:scale-95"
+                            >
+                                <svg
+                                    className="h-5 w-5"
+                                    fill="currentColor"
+                                    viewBox="0 0 24 24"
+                                    aria-hidden="true"
+                                >
+                                    <path fillRule="evenodd" d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z" clipRule="evenodd" />
+                                </svg>
+                                Facebook
+                            </button>
+                        </div>
+                    </div>
 
                     <div className="mt-8 text-center">
                         <p className="text-sm text-gray-500">

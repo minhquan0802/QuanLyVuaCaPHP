@@ -7,6 +7,9 @@ use App\Http\Controllers\SanPhamController;
 use App\Http\Controllers\NguoiDungController;
 use App\Http\Controllers\DonHangController;
 use App\Http\Controllers\ThanhToanController;
+use App\Http\Controllers\Auth\PasswordResetLinkController;
+use App\Http\Controllers\Auth\NewPasswordController;
+
 
 // Danh mục routes
 Route::apiResource('danh-muc', DanhMucController::class);
@@ -22,6 +25,7 @@ Route::apiResource('don-hang', DonHangController::class);
 
 // Thanh toán routes
 Route::apiResource('thanh-toan', ThanhToanController::class);
+Route::post('/vnpay_payment', [CheckoutController::class, 'vnpay_payment']);
 
 // THÊM DÒNG NÀY:
 Route::post('/login', [NguoiDungController::class, 'login']);
@@ -29,3 +33,7 @@ Route::post('/login', [NguoiDungController::class, 'login']);
 Route::post('/momo_payment', [CheckoutController::class, 'momo_payment']);
 
 Route::post('/save-momo-transaction', [CheckoutController::class, 'saveTransaction']);
+
+Route::post('/forgot-password', [PasswordResetLinkController::class, 'store']);
+
+Route::post('/reset-password', [NewPasswordController::class, 'store']);

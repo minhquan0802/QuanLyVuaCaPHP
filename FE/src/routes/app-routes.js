@@ -7,7 +7,7 @@ import Checkout from '../pages/checkout';
 import Register from '../pages/register';
 import UserProfile from '../pages/UserProfile';
 import PaymentResult from '../pages/PaymentResult';
-
+import ForgotPassword from '../pages/ForgotPassword';
 // Import các trang Admin
 import AdminDashboard from '../pages/admin/AdminDashboard'; 
 import QuanLySanPham from '../pages/admin/QuanLySanPham';
@@ -17,11 +17,17 @@ import QuanLyDanhMuc from '../pages/admin/QuanLyDanhMuc';
 
 import AdminRoute from './AdminRoute';
 
+import GoogleCallback from '../pages/GoogleCallback';
+import ResetPassword from '../pages/ResetPassword';
+
+
 export default function AppRoutes() {
     return (
         <Routes>
             {/* --- Public Routes --- */}
             <Route path='/' element={<Login />} />
+            <Route path='/forgot-password' element={<ForgotPassword />} />
+            <Route path='/reset-password' element={<ResetPassword />} />
             <Route path='/register' element={<Register />} />
             <Route path='/home' element={<Home />} />
             
@@ -36,6 +42,9 @@ export default function AppRoutes() {
             {/* User Profile */}
             <Route path='/profile' element={<UserProfile />} />
             <Route path="/payment-result" element={<PaymentResult />} />
+
+
+            <Route path="/auth/google/callback" element={<GoogleCallback />} />
 
             {/* --- PROTECTED ADMIN ROUTES --- */}
             {/* Tất cả các Route nằm trong cặp thẻ này đều sẽ bị kiểm tra bởi AdminRoute */}

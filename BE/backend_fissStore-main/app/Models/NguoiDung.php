@@ -2,10 +2,18 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
+// 1. Sửa dòng này: Kế thừa từ Authenticatable thay vì Model thường để dùng tính năng Auth
+use Illuminate\Foundation\Auth\User as Authenticatable; 
+use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens; // Import Sanctum
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
-class NguoiDung extends Model
+// 2. Class kế thừa Authenticatable
+class NguoiDung extends Authenticatable 
 {
+    // 3. QUAN TRỌNG: Phải có dòng này thì mới dùng được createToken()
+    use HasApiTokens, HasFactory, Notifiable;
+
     protected $table = 'nguoi_dung';
     protected $primaryKey = 'ma_nguoi_dung';
     
@@ -17,10 +25,12 @@ class NguoiDung extends Model
         'dia_chi',
         'ngay_tao',
         'role', 
+        'google_id', // 4. QUAN TRỌNG: Thêm trường này để lưu ID Google
     ];
 
     protected $hidden = [
         'mat_khau',
+        'remember_token',
     ];
 
     protected $casts = [
