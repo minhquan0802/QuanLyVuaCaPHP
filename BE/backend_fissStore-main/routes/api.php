@@ -34,6 +34,8 @@ Route::post('/momo_payment', [CheckoutController::class, 'momo_payment']);
 
 Route::post('/save-momo-transaction', [CheckoutController::class, 'saveTransaction']);
 
+Route::post('save-vnpay-transaction', [CheckoutController::class, 'saveVnpayTransaction']);
+
 Route::post('/forgot-password', [PasswordResetLinkController::class, 'store']);
 
 Route::post('/reset-password', [NewPasswordController::class, 'store']);

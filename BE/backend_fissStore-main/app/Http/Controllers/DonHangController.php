@@ -132,7 +132,8 @@ class DonHangController extends Controller
         }
 
         $validated = $request->validate([
-            'trang_thai' => 'sometimes|required|in:pending,processing,completed,cancelled',
+            'trang_thai' => 'sometimes|required|in:pending,processing,delivering,completed,cancelled',
+            
             'dia_chi_giao_hang' => 'sometimes|required|string',
             'ghi_chu' => 'nullable|string',
         ]);

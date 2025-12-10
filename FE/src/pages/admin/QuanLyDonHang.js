@@ -85,6 +85,8 @@ export default function QuanLyDonHang() {
             newStatus === 'cancelled' ? "Bạn chắc chắn muốn HỦY đơn này?" : 
             newStatus === 'processing' ? "Xác nhận duyệt và đóng gói đơn hàng này?" :
             newStatus === 'completed' ? "Xác nhận đơn hàng đã giao thành công?" :
+            newStatus === 'delivering' ? "Xác nhận bàn giao cho đơn vị vận chuyển?" :
+            
             `Chuyển trạng thái sang: ${newStatus}?`;
 
         if (!window.confirm(confirmMsg)) return;
@@ -121,8 +123,7 @@ export default function QuanLyDonHang() {
         switch (status) {
             case 'pending': return <span className="px-3 py-1 rounded-full text-xs font-bold bg-yellow-100 text-yellow-700 border border-yellow-200">Chờ xử lý</span>;
             case 'processing': return <span className="px-3 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-700 border border-blue-200">Đang đóng gói</span>;
-            case 'delivering': return <span className="px-3 py-1 rounded-full text-xs font-bold bg-indigo-100 text-indigo-700 border border-indigo-200">Đang giao</span>;
-            case 'completed': return <span className="px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-700 border border-green-200">Hoàn tất</span>;
+            case 'delivering': return <span className="px-3 py-1 rounded-full text-xs font-bold bg-purple-100 text-purple-700 border border-purple-200">Đang giao</span>; case 'completed': return <span className="px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-700 border border-green-200">Hoàn tất</span>;
             case 'cancelled': return <span className="px-3 py-1 rounded-full text-xs font-bold bg-red-100 text-red-700 border border-red-200">Đã hủy</span>;
             default: return <span className="px-3 py-1 rounded-full text-xs font-bold bg-gray-100 text-gray-600">{status}</span>;
         }
@@ -197,23 +198,35 @@ export default function QuanLyDonHang() {
                                                 >
                                                     <span className="material-symbols-outlined text-[20px]">visibility</span>
                                                 </button>
-                                                
-                                                {/* Các nút hành động khác */}
+
+                                                {/* 1. Pending -> Processing (Duyệt đơn) */}
                                                 {item.trang_thai === 'pending' && (
                                                     <button onClick={() => handleUpdateStatus(item.ma_don_hang, 'processing')} className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Duyệt đơn">
                                                         <span className="material-symbols-outlined text-[20px]">inventory_2</span>
                                                     </button>
                                                 )}
+
+                                                {/* 2. Processing -> Delivering (Giao hàng) - PHẦN BẠN THIẾU */}
                                                 {item.trang_thai === 'processing' && (
+                                                    <button onClick={() => handleUpdateStatus(item.ma_don_hang, 'delivering')} className="p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors" title="Giao hàng">
+                                                        <span className="material-symbols-outlined text-[20px]">local_shipping</span>
+                                                    </button>
+                                                )}
+
+                                                {/* 3. Delivering -> Completed (Hoàn tất) */}
+                                                {item.trang_thai === 'delivering' && (
                                                     <button onClick={() => handleUpdateStatus(item.ma_don_hang, 'completed')} className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors" title="Hoàn tất">
                                                         <span className="material-symbols-outlined text-[20px]">check_circle</span>
                                                     </button>
                                                 )}
-                                                {(item.trang_thai !== 'cancelled' && item.trang_thai !== 'completed') && (
+
+                                                {/* 4. Nút Hủy (Chỉ hiện khi chưa hoàn thành/hủy/đang giao) */}
+                                                {(item.trang_thai === 'pending' || item.trang_thai === 'processing') && (
                                                     <button onClick={() => handleUpdateStatus(item.ma_don_hang, 'cancelled')} className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors" title="Hủy đơn">
                                                         <span className="material-symbols-outlined text-[20px]">cancel</span>
                                                     </button>
                                                 )}
+                                             
                                             </div>
                                         </td>
                                     </tr>
@@ -319,17 +332,50 @@ export default function QuanLyDonHang() {
                                 </table>
                             </div>
 
-                            {/* Actions Footer */}
+                            {/* Actions Footer trong Modal */}
                             <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
+
+                                {/* Pending -> Processing */}
                                 {selectedOrder.trang_thai === 'pending' && (
-                                    <button 
-                                        onClick={() => handleUpdateStatus(selectedOrder.ma_don_hang, 'processing')}
-                                        className="px-4 py-2 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 transition-colors"
+                                    <>
+                                        <button
+                                            onClick={() => handleUpdateStatus(selectedOrder.ma_don_hang, 'cancelled')}
+                                            className="px-4 py-2 border border-red-200 text-red-600 rounded-lg font-bold hover:bg-red-50 transition-colors"
+                                        >
+                                            Hủy đơn
+                                        </button>
+                                        <button
+                                            onClick={() => handleUpdateStatus(selectedOrder.ma_don_hang, 'processing')}
+                                            className="px-4 py-2 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 transition-colors"
+                                        >
+                                            Duyệt & Đóng gói
+                                        </button>
+                                    </>
+                                )}
+
+                                {/* Processing -> Delivering (PHẦN BẠN THIẾU) */}
+                                {selectedOrder.trang_thai === 'processing' && (
+                                    <button
+                                        onClick={() => handleUpdateStatus(selectedOrder.ma_don_hang, 'delivering')}
+                                        className="px-4 py-2 bg-purple-600 text-white rounded-lg font-bold hover:bg-purple-700 transition-colors flex items-center gap-2"
                                     >
-                                        Duyệt đơn hàng
+                                        <span className="material-symbols-outlined text-[20px]">local_shipping</span>
+                                        Giao cho vận chuyển
                                     </button>
                                 )}
-                                <button 
+
+                                {/* Delivering -> Completed */}
+                                {selectedOrder.trang_thai === 'delivering' && (
+                                    <button
+                                        onClick={() => handleUpdateStatus(selectedOrder.ma_don_hang, 'completed')}
+                                        className="px-4 py-2 bg-green-600 text-white rounded-lg font-bold hover:bg-green-700 transition-colors flex items-center gap-2"
+                                    >
+                                        <span className="material-symbols-outlined text-[20px]">check_circle</span>
+                                        Xác nhận giao thành công
+                                    </button>
+                                )}
+
+                                <button
                                     onClick={() => setIsDetailModalOpen(false)}
                                     className="px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-lg font-medium hover:bg-slate-50 transition-colors"
                                 >

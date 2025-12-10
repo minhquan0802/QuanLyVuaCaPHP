@@ -8,6 +8,7 @@ import Register from '../pages/register';
 import UserProfile from '../pages/UserProfile';
 import PaymentResult from '../pages/PaymentResult';
 import ForgotPassword from '../pages/ForgotPassword';
+import TheoDoiDonHang from '../pages/TheoDoiDonHang';
 // Import các trang Admin
 import AdminDashboard from '../pages/admin/AdminDashboard'; 
 import QuanLySanPham from '../pages/admin/QuanLySanPham';
@@ -42,7 +43,7 @@ export default function AppRoutes() {
             {/* User Profile */}
             <Route path='/profile' element={<UserProfile />} />
             <Route path="/payment-result" element={<PaymentResult />} />
-
+            <Route path="/theodoidonhang" element={<TheoDoiDonHang />} />
 
             <Route path="/auth/google/callback" element={<GoogleCallback />} />
 

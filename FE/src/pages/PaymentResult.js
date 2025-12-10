@@ -18,11 +18,13 @@ export default function PaymentResult() {
     useEffect(() => {
         const params = Object.fromEntries([...searchParams]);
 
-        // Nếu là link callback hợp lệ và chưa gọi API
-        if (params.signature && params.resultCode && !isCalled.current) {
-            isCalled.current = true; 
+        // Nếu đã xử lý rồi thì bỏ qua (Tránh React 18 render 2 lần)
+        if (isCalled.current) return;
 
-            // Hiển thị trạng thái ra màn hình
+        // === CASE 1: XỬ LÝ MOMO (GIỮ NGUYÊN) ===
+        if (params.signature && params.resultCode) {
+            isCalled.current = true; 
+            
             setStatus({
                 isSuccess: params.resultCode === '0',
                 message: params.message,
@@ -30,19 +32,14 @@ export default function PaymentResult() {
                 orderInfo: params.orderInfo
             });
 
-            // Nếu thanh toán thành công, chuẩn bị dữ liệu để lưu đơn hàng
             if (params.resultCode === '0') {
-                const saveOrder = async () => {
-                    // 1. Lấy dữ liệu từ LocalStorage
+                const saveOrderMomo = async () => {
                     const cart = JSON.parse(localStorage.getItem('cart')) || [];
                     const currentUser = JSON.parse(localStorage.getItem('currentUser')) || {};
                     const userId = localStorage.getItem('user_id');
 
-                    // 2. Tạo cấu trúc đơn hàng (Giống bên COD)
                     const orderData = {
                         ma_nguoi_dung: userId ? parseInt(userId) : null,
-                        // Tái tạo lại chuỗi địa chỉ nếu cần, hoặc lấy từ localStorage nếu bạn đã lưu tạm trước khi sang MoMo
-                        // Ở đây ví dụ lấy thông tin user mặc định:
                         dia_chi_giao_hang: `${currentUser.dia_chi || ""} (Người nhận: ${currentUser.ho_ten || ""}, SĐT: ${currentUser.so_dien_thoai || ""})`,
                         ghi_chu: "Thanh toán qua MoMo",
                         chi_tiet: cart.map(item => ({
@@ -51,31 +48,95 @@ export default function PaymentResult() {
                         }))
                     };
 
-                    // 3. Gửi tất cả về Backend (MoMo Params + Order Data)
                     try {
                         const res = await fetch('http://127.0.0.1:8000/api/save-momo-transaction', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({
-                                ...params, // Các tham số của MoMo
-                                order_data: orderData // Dữ liệu đơn hàng để lưu bảng DonHang
+                                ...params, 
+                                order_data: orderData 
                             })
                         });
 
                         if (res.ok) {
-                            console.log("Đã lưu đơn hàng thành công!");
-                            // Xóa giỏ hàng sau khi lưu xong
+                            console.log("Đã lưu đơn hàng MoMo thành công!");
                             localStorage.removeItem('cart');
                             window.dispatchEvent(new Event('storage'));
                         }
                     } catch (error) {
-                        console.error("Lỗi lưu đơn hàng:", error);
+                        console.error("Lỗi lưu đơn hàng MoMo:", error);
                     }
                 };
-
-                saveOrder();
+                saveOrderMomo();
             }
         }
+
+        // === CASE 2: XỬ LÝ VNPAY (MỚI THÊM) ===
+        // VNPAY trả về vnp_ResponseCode
+        else if (params.vnp_ResponseCode) {
+            isCalled.current = true;
+
+            const isSuccess = params.vnp_ResponseCode === '00';
+            
+            // Xử lý hiển thị text (VNPAY trả về dấu + thay cho khoảng trắng)
+            // Ví dụ: Thanh+toan+... -> Thanh toan ...
+            const rawInfo = params.vnp_OrderInfo || "";
+            const decodedInfo = decodeURIComponent(rawInfo.replace(/\+/g, " "));
+
+            setStatus({
+                isSuccess: isSuccess,
+                message: isSuccess ? "Giao dịch thành công" : "Giao dịch thất bại",
+                amount: parseInt(params.vnp_Amount) / 100, // VNPAY nhân 100 nên phải chia 100
+                orderInfo: decodedInfo
+            });
+
+            if (isSuccess) {
+                const saveOrderVnpay = async () => {
+                    // 1. Lấy dữ liệu (Giống MoMo)
+                    const cart = JSON.parse(localStorage.getItem('cart')) || [];
+                    const currentUser = JSON.parse(localStorage.getItem('currentUser')) || {};
+                    const userId = localStorage.getItem('user_id');
+
+                    // 2. Tạo data đơn hàng
+                    const orderData = {
+                        ma_nguoi_dung: userId ? parseInt(userId) : null,
+                        dia_chi_giao_hang: `${currentUser.dia_chi || ""} (Người nhận: ${currentUser.ho_ten || ""}, SĐT: ${currentUser.so_dien_thoai || ""})`,
+                        ghi_chu: "Thanh toán qua VNPAY",
+                        chi_tiet: cart.map(item => ({
+                            ma_san_pham: parseInt(item.id),
+                            so_luong: parseInt(item.quantity)
+                        }))
+                    };
+
+                    // 3. Gửi về Backend để kiểm tra chữ ký (SecureHash) và lưu DB
+                    try {
+                        const res = await fetch('http://127.0.0.1:8000/api/save-vnpay-transaction', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                ...params, // Gửi toàn bộ params VNPAY về server để check hash
+                                order_data: orderData
+                            })
+                        });
+
+                        const data = await res.json();
+
+                        if (res.ok && data.code === '00') {
+                            console.log("Đã lưu đơn hàng VNPAY thành công!");
+                            localStorage.removeItem('cart');
+                            window.dispatchEvent(new Event('storage'));
+                        } else {
+                            // Nếu Server check chữ ký sai
+                            setStatus(prev => ({...prev, isSuccess: false, message: "Lỗi xác thực chữ ký!"}));
+                        }
+                    } catch (error) {
+                        console.error("Lỗi lưu đơn hàng VNPAY:", error);
+                    }
+                };
+                saveOrderVnpay();
+            }
+        }
+
     }, [searchParams]);
 
     return (
@@ -102,6 +163,12 @@ export default function PaymentResult() {
                     <p className="text-slate-500 mb-8">{status.message}</p>
 
                     <div className="bg-slate-50 rounded-xl p-6 mb-8 text-left space-y-3 border border-slate-200">
+                        <div className="flex justify-between text-sm">
+                            <span className="text-slate-500">Nội dung:</span>
+                            <span className="font-medium text-slate-800 text-right line-clamp-2 ml-4">
+                                {status.orderInfo}
+                            </span>
+                        </div>
                         <div className="flex justify-between text-sm">
                             <span className="text-slate-500">Tổng tiền:</span>
                             <span className="font-bold text-blue-600 text-lg">

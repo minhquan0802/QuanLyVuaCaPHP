@@ -1,16 +1,16 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react"; // Thêm useRef
 import { useNavigate, useLocation } from "react-router-dom";
 
 export default function Header() {
     const navigate = useNavigate();
     const location = useLocation();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-    
-    // State lưu số lượng giỏ hàng
     const [cartCount, setCartCount] = useState(0);
-
-    // State lưu User
     const [user, setUser] = useState(null);
+
+    // --- 1. THÊM STATE & REF CHO DROPDOWN ---
+    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+    const dropdownRef = useRef(null);
 
     const isActive = (path) => location.pathname === path;
 
@@ -22,26 +22,31 @@ export default function Header() {
     const handleNavigation = (path) => {
         navigate(path);
         setIsMobileMenuOpen(false);
+        setIsDropdownOpen(false); // Đóng dropdown khi chuyển trang
     };
 
-    // --- 1. LOAD DATA TỪ LOCAL STORAGE ---
+    // --- 2. XỬ LÝ CLICK OUTSIDE ĐỂ ĐÓNG DROPDOWN ---
     useEffect(() => {
-        // --- SỬA Ở ĐÂY: Dùng key "currentUser" thay vì "user" ---
+        function handleClickOutside(event) {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+                setIsDropdownOpen(false);
+            }
+        }
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, [dropdownRef]);
+
+    // --- LOAD DATA (Giữ nguyên code cũ của bạn) ---
+    useEffect(() => {
         const storedUser = localStorage.getItem("currentUser"); 
-        
         if (storedUser) {
             try {
-                const parsedUser = JSON.parse(storedUser);
-                setUser(parsedUser); // Lưu vào state để dùng
-                console.log("Đã load được user:", parsedUser); // Debug xem load được chưa
+                setUser(JSON.parse(storedUser));
             } catch (e) {
                 console.error("Lỗi parse user:", e);
             }
-        } else {
-            console.log("Không tìm thấy currentUser trong LocalStorage");
         }
 
-        // Load & Auto Update Cart Count
         const updateCartCount = () => {
             const cart = JSON.parse(localStorage.getItem('cart')) || [];
             const total = cart.reduce((acc, item) => acc + (item.quantity || 0), 0);
@@ -56,26 +61,26 @@ export default function Header() {
             clearInterval(intervalId);
             window.removeEventListener('storage', updateCartCount);
         };
-    }, [location.pathname]); 
+    }, [location.pathname]);
 
-    // --- 2. XỬ LÝ CLICK TÀI KHOẢN ---
+    // --- 3. XỬ LÝ CLICK TÀI KHOẢN ---
     const handleAccountClick = () => {
-        // Kiểm tra xem đã load được user chưa
         if (!user) {
-            console.log("User state đang null -> Chuyển về Login");
-            navigate('/'); 
-            return;
-        }
-
-        console.log("User Role:", user.role); // Debug xem role là gì
-
-        // Kiểm tra Role (dựa trên data mẫu bạn gửi: role là "customer" hoặc "admin")
-        if (user.role === 'admin') {
-            navigate('/admin'); 
+            navigate('/'); // Chưa login thì chuyển trang Login
         } else {
-            // Trường hợp là 'customer' hoặc role khác
-            navigate('/profile'); 
+            setIsDropdownOpen(!isDropdownOpen); // Đã login thì toggle dropdown
         }
+    };
+
+    // --- 4. HÀM ĐĂNG XUẤT (Tùy chọn thêm vào menu) ---
+    const handleLogout = () => {
+        localStorage.removeItem("currentUser");
+        localStorage.removeItem("user_id");
+        localStorage.removeItem("cart"); // Tùy chọn xóa giỏ hàng
+        setUser(null);
+        setIsDropdownOpen(false);
+        window.dispatchEvent(new Event('storage'));
+        navigate('/');
     };
 
     return (
@@ -89,8 +94,8 @@ export default function Header() {
                             <div className="relative flex items-center justify-center size-10 rounded-full bg-white/20 group-hover:bg-white/30 transition-colors">
                                 <span className="material-symbols-outlined text-3xl text-white transition-colors duration-300">phishing</span>
                             </div>
-                            <h2 className="font-display text-xl md:text-2xl font-bold text-white tracking-tight">
-                               Minh Mạnh Quân Fresh
+                            <h2 className="font-display text-xl md:text-2xl font-bold text-white tracking-tight drop-shadow-[0_0_6px_rgba(165,243,252,0.6)]">
+                                Minh Mạnh Quân Fresh
                             </h2>
                         </div>
 
@@ -110,14 +115,55 @@ export default function Header() {
                         {/* ACTIONS */}
                         <div className="flex items-center gap-3">
                             
-                            {/* Nút Tài khoản */}
-                            <button
-                                onClick={handleAccountClick}
-                                className="hidden md:flex items-center justify-center size-10 rounded-full text-white hover:bg-white/20 transition-all duration-300 group"
-                                title={user ? `Xin chào ${user.ho_ten}` : "Tài khoản"}
-                            >
-                                <span className="material-symbols-outlined group-hover:scale-110 transition-transform">person</span>
-                            </button>
+                            {/* --- 5. NÚT TÀI KHOẢN + DROPDOWN --- */}
+                            <div className="relative" ref={dropdownRef}>
+                                <button
+                                    onClick={handleAccountClick}
+                                    className={`hidden md:flex items-center justify-center size-10 rounded-full text-white hover:bg-white/20 transition-all duration-300 group ${isDropdownOpen ? 'bg-white/20' : ''}`}
+                                    title={user ? `Xin chào ${user.ho_ten}` : "Tài khoản"}
+                                >
+                                    <span className="material-symbols-outlined group-hover:scale-110 transition-transform">person</span>
+                                </button>
+
+                                {/* DROPDOWN MENU */}
+                                {isDropdownOpen && user && (
+                                    <div className="absolute right-0 mt-2 w-56 origin-top-right bg-white rounded-xl shadow-lg ring-1 ring-black/5 focus:outline-none animate-in fade-in zoom-in duration-200 overflow-hidden">
+                                        <div className="px-4 py-3 border-b border-gray-100 bg-gray-50/50">
+                                            <p className="text-sm font-bold text-gray-900 truncate">{user.ho_ten}</p>
+                                            <p className="text-xs text-gray-500 truncate">{user.email}</p>
+                                        </div>
+
+                                        <div className="py-1">
+                                            {user.role === 'admin' ? (
+                                                // --- MENU CHO ADMIN ---
+                                                <button onClick={() => handleNavigation('/admin')} className="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 text-left transition-colors">
+                                                    <span className="material-symbols-outlined text-[20px]">dashboard</span>
+                                                    Trang quản trị
+                                                </button>
+                                            ) : (
+                                                // --- MENU CHO KHÁCH HÀNG ---
+                                                <>
+                                                    <button onClick={() => handleNavigation('/profile')} className="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 text-left transition-colors">
+                                                        <span className="material-symbols-outlined text-[20px]">account_circle</span>
+                                                        Thông tin cá nhân
+                                                    </button>
+                                                    <button onClick={() => handleNavigation('/theodoidonhang')} className="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 text-left transition-colors">
+                                                        <span className="material-symbols-outlined text-[20px]">receipt_long</span>
+                                                        Theo dõi đơn hàng
+                                                    </button>
+                                                </>
+                                            )}
+                                            
+                                            <div className="border-t border-gray-100 my-1"></div>
+                                            
+                                            <button onClick={handleLogout} className="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 text-left transition-colors">
+                                                <span className="material-symbols-outlined text-[20px]">logout</span>
+                                                Đăng xuất
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
 
                             {/* Nút Giỏ hàng */}
                             <button
@@ -139,7 +185,7 @@ export default function Header() {
                         </div>
                     </div>
 
-                    {/* MOBILE MENU */}
+                    {/* MOBILE MENU (Cập nhật hiển thị giống Desktop) */}
                     {isMobileMenuOpen && (
                         <div className="absolute top-full left-4 right-4 mt-2 p-4 rounded-xl bg-white shadow-xl border border-gray-100 md:hidden animate-in fade-in slide-in-from-top-5 duration-200">
                             <nav className="flex flex-col gap-2">
@@ -149,10 +195,40 @@ export default function Header() {
                                     </button>
                                 ))}
                                 <div className="h-px bg-gray-100 my-1"></div>
-                                <button onClick={handleAccountClick} className="w-full text-left px-4 py-3 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50 flex items-center gap-3">
-                                    <span className="material-symbols-outlined text-gray-400">person</span>
-                                    {user ? "Tài khoản cá nhân" : "Đăng nhập"}
-                                </button>
+                                
+                                {user ? (
+                                    // Mobile view cho User đã login
+                                    <>
+                                        <div className="px-4 py-2 text-xs font-bold text-gray-400 uppercase">Tài khoản</div>
+                                        {user.role === 'admin' ? (
+                                            <button onClick={() => handleNavigation('/admin')} className="w-full text-left px-4 py-3 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50 flex items-center gap-3">
+                                                <span className="material-symbols-outlined text-gray-400">dashboard</span>
+                                                Quản trị viên
+                                            </button>
+                                        ) : (
+                                            <>
+                                                <button onClick={() => handleNavigation('/profile')} className="w-full text-left px-4 py-3 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50 flex items-center gap-3">
+                                                    <span className="material-symbols-outlined text-gray-400">account_circle</span>
+                                                    Thông tin cá nhân
+                                                </button>
+                                                <button onClick={() => handleNavigation('/theodoidonhang')} className="w-full text-left px-4 py-3 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50 flex items-center gap-3">
+                                                    <span className="material-symbols-outlined text-gray-400">receipt_long</span>
+                                                    Theo dõi đơn hàng
+                                                </button>
+                                            </>
+                                        )}
+                                        <button onClick={handleLogout} className="w-full text-left px-4 py-3 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 flex items-center gap-3">
+                                            <span className="material-symbols-outlined">logout</span>
+                                            Đăng xuất
+                                        </button>
+                                    </>
+                                ) : (
+                                    // Mobile view cho Guest
+                                    <button onClick={() => handleNavigation('/')} className="w-full text-left px-4 py-3 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50 flex items-center gap-3">
+                                        <span className="material-symbols-outlined text-gray-400">login</span>
+                                        Đăng nhập
+                                    </button>
+                                )}
                             </nav>
                         </div>
                     )}

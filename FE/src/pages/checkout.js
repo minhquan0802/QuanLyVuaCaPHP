@@ -460,10 +460,7 @@ export default function Checkout() {
     const momoFormRef = useRef(null);
     
     // Tạo nội dung đơn hàng
-    const orderInfo = `Thanh toan don hang cho ${formData.fullName}`;
-    // Dành cho MoMo (dùng form hidden)
-    const momoOrderInfo = `Thanh toán cho ${formData.fullName} - SĐT ${formData.phone}`;
-    const dynamicOrderInfo = `Thanh toan cho ${formData.fullName} - ${formData.phone}`;
+    const paymentDescription = `Thanh toan cho ${formData.fullName} - ${formData.phone}`;
     // --- 1. Load Data ---
     useEffect(() => {
         const savedCart = localStorage.getItem('cart');
@@ -510,15 +507,24 @@ export default function Checkout() {
         }
 
         // === CASE 1: MOMO ===
+        // if (paymentMethod === 'wallet') {
+        //     const confirmPayment = window.confirm(`Xác nhận thanh toán ${total.toLocaleString('vi-VN')}đ qua MoMo?`);
+        //     if (!confirmPayment) return;
+            
+        //     localStorage.removeItem('cart');
+        //     window.dispatchEvent(new Event('storage'));
+        //     if (momoFormRef.current) momoFormRef.current.submit();
+        //     return;
+        // }
+
         if (paymentMethod === 'wallet') {
             const confirmPayment = window.confirm(`Xác nhận thanh toán ${total.toLocaleString('vi-VN')}đ qua MoMo?`);
             if (!confirmPayment) return;
-            
-            localStorage.removeItem('cart');
             window.dispatchEvent(new Event('storage'));
-            if (momoFormRef.current) momoFormRef.current.submit();
+            momoFormRef.current?.submit();
             return;
         }
+
 
         // === CASE 2: VNPAY (MỚI THÊM) ===
         if (paymentMethod === 'vnpay') {
@@ -527,22 +533,30 @@ export default function Checkout() {
 
             setIsLoading(true);
             try {
-                // Gọi API lấy link VNPAY
+                const userId = localStorage.getItem("user_id");
                 const res = await fetch('http://127.0.0.1:8000/api/vnpay_payment', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         total_vnpay: total,
-                        order_info: dynamicOrderInfo
+                        order_info: paymentDescription,
+                        order_data: {
+                            ma_nguoi_dung: userId ? parseInt(userId) : null,
+                            dia_chi_giao_hang: formData.address,
+                            ghi_chu: paymentDescription,
+                            chi_tiet: cartItems.map(item => ({
+                                ma_san_pham: item.id,
+                                so_luong: item.quantity
+                            }))
+                        }
                     })
                 });
+
                 const data = await res.json();
+                console.log("VNPAY Response:", data);
 
                 if (data.code === '00' && data.data) {
-                    localStorage.removeItem('cart');
-                    window.dispatchEvent(new Event('storage'));
-                    // Chuyển hướng sang VNPAY
-                    window.location.href = data.data; 
+                    window.location.href = data.data;
                 } else {
                     alert("Lỗi tạo giao dịch VNPAY");
                 }
@@ -735,7 +749,7 @@ export default function Checkout() {
             {/* Form ẩn Momo */}
             <form ref={momoFormRef} action="http://127.0.0.1:8000/api/momo_payment" method="POST" className="hidden">
                 <input type="hidden" name="total_momo" value={total} />
-                <input type="hidden" name="order_info_momo" value={momoOrderInfo} />
+                <input type="hidden" name="order_info_momo" value={paymentDescription} />
                 <input type="hidden" name="payUrl" value="Thanh toán MOMO" />
             </form>
         </div>
