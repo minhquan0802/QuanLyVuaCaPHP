@@ -76,8 +76,9 @@ export default function Header() {
     if (StringValue !== '') {
       navigate(`/product-search/${StringValue}`);
       setSearch('');
+    } else {
+      navigate('/home');
     }
-    navigate('/home');
   };
   // --- 4. HÀM ĐĂNG XUẤT (Tùy chọn thêm vào menu) ---
   const handleLogout = () => {
@@ -92,24 +93,27 @@ export default function Header() {
 
   return (
     <>
-      <header className="fixed top-0 left-0 right-0 z-50 w-full px-0 sm:px-0 lg:px-0">
+      <header className="fixed top-0 left-0 right-0 z-50 w-full">
         <div className="mx-auto max-w-7xl">
-          <div className="relative flex items-center justify-between rounded-2xl bg-blue-600 shadow-xl shadow-blue-200 ring-1 ring-white/10 transition-all duration-300 px-6 py-3 mt-4 mx-4 md:mx-4 lg:mx-auto">
+          <div className="relative flex items-center justify-between rounded-none sm:rounded-2xl bg-blue-600 shadow-xl shadow-blue-200 ring-1 ring-white/10 transition-all duration-300 px-3 sm:px-6 py-3 sm:mt-4 sm:mx-4 lg:mx-auto">
             {/* LOGO */}
             <div
               onClick={() => handleNavigation('/home')}
-              className="flex items-center gap-3 cursor-pointer group select-none"
+              className="flex items-center gap-2 sm:gap-3 cursor-pointer group select-none flex-shrink-0"
             >
-              <div className="relative flex items-center justify-center size-10 rounded-full bg-white/20 group-hover:bg-white/30 transition-colors">
-                <span className="material-symbols-outlined text-3xl text-white transition-colors duration-300">
+              <div className="relative flex items-center justify-center size-8 sm:size-10 rounded-full bg-white/20 group-hover:bg-white/30 transition-colors">
+                <span className="material-symbols-outlined text-2xl sm:text-3xl text-white transition-colors duration-300">
                   phishing
                 </span>
               </div>
-              <h2 className="font-display text-xl md:text-2xl font-bold text-white tracking-tight drop-shadow-[0_0_6px_rgba(165,243,252,0.6)]">
-                Minh Mạnh Quân Fresh
+              <h2 className="font-display text-sm sm:text-xl md:text-2xl font-bold text-white tracking-tight drop-shadow-[0_0_6px_rgba(165,243,252,0.6)]">
+                <span className="hidden sm:inline">Minh Mạnh Quân Fresh</span>
+                <span className="sm:hidden">MMQ Fresh</span>
               </h2>
             </div>
-            <div className="w-full md:w-[450px]">
+
+            {/* SEARCH BAR - Hidden on mobile, visible on lg+ */}
+            <div className="hidden lg:block lg:w-[450px] mx-4">
               <div className="bg-white/10 backdrop-blur-md p-2 rounded-3xl border border-white/20 shadow-2xl">
                 <div className="relative group">
                   <div className="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
@@ -123,21 +127,29 @@ export default function Header() {
                     onChange={(e) => {
                       setSearch(e.target.value);
                     }}
-                    className="block w-full pl-12 pr-4 py-4 rounded-2xl border-none bg-white/90 text-slate-900 shadow-sm placeholder:text-slate-500 focus:bg-white focus:ring-0 transition-all"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && search.trim()) {
+                        handleProductSearch(search);
+                      }
+                    }}
+                    className="block w-full pl-12 pr-20 py-3 rounded-2xl border-none bg-white/90 text-slate-900 shadow-sm placeholder:text-slate-500 focus:bg-white focus:ring-0 transition-all"
                     placeholder="Bạn muốn ăn gì hôm nay?"
                   />
                   <button
-                    className="absolute right-2 top-2 bottom-2 px-6 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-colors shadow-lg shadow-blue-600/30"
+                    className="absolute right-2 top-2 bottom-2 px-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-colors shadow-lg shadow-blue-600/30 flex items-center gap-1"
                     onClick={() => handleProductSearch(search)}
                   >
-                    Tìm
+                    <span className="material-symbols-outlined text-[18px]">
+                      search
+                    </span>
+                    <span className="hidden xl:inline">Tìm</span>
                   </button>
                 </div>
               </div>
             </div>
 
             {/* NAV */}
-            <nav className="hidden md:flex items-center gap-8">
+            <nav className="hidden lg:flex items-center gap-6 xl:gap-8">
               {navItems.map((item) => (
                 <button
                   key={item.path}
@@ -154,12 +166,23 @@ export default function Header() {
             </nav>
 
             {/* ACTIONS */}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+              {/* Search icon for mobile/tablet */}
+              <button
+                onClick={() => navigate('/home')}
+                className="lg:hidden flex items-center justify-center size-9 sm:size-10 rounded-full text-white hover:bg-white/20 transition-all duration-300"
+                title="Tìm kiếm"
+              >
+                <span className="material-symbols-outlined text-[20px]">
+                  search
+                </span>
+              </button>
+
               {/* --- 5. NÚT TÀI KHOẢN + DROPDOWN --- */}
               <div className="relative" ref={dropdownRef}>
                 <button
                   onClick={handleAccountClick}
-                  className={`hidden md:flex items-center justify-center size-10 rounded-full text-white hover:bg-white/20 transition-all duration-300 group ${
+                  className={`hidden sm:flex items-center justify-center size-9 sm:size-10 rounded-full text-white hover:bg-white/20 transition-all duration-300 group ${
                     isDropdownOpen ? 'bg-white/20' : ''
                   }`}
                   title={user ? `Xin chào ${user.ho_ten}` : 'Tài khoản'}
@@ -236,14 +259,14 @@ export default function Header() {
               {/* Nút Giỏ hàng */}
               <button
                 onClick={() => handleNavigation('/cart')}
-                className="relative flex items-center justify-center size-10 rounded-full bg-white text-blue-600 shadow-md hover:bg-blue-50 hover:text-blue-700 hover:-translate-y-0.5 transition-all duration-300"
+                className="relative flex items-center justify-center size-9 sm:size-10 rounded-full bg-white text-blue-600 shadow-md hover:bg-blue-50 hover:text-blue-700 hover:-translate-y-0.5 transition-all duration-300"
               >
-                <span className="material-symbols-outlined text-[20px]">
+                <span className="material-symbols-outlined text-[18px] sm:text-[20px]">
                   shopping_cart
                 </span>
                 {cartCount > 0 && (
-                  <span className="absolute -top-1 -right-1 flex size-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white border-2 border-blue-600 animate-in zoom-in duration-300">
-                    {cartCount}
+                  <span className="absolute -top-1 -right-1 flex size-4 sm:size-5 items-center justify-center rounded-full bg-red-500 text-[9px] sm:text-[10px] font-bold text-white border-2 border-blue-600 animate-in zoom-in duration-300">
+                    {cartCount > 99 ? '99+' : cartCount}
                   </span>
                 )}
               </button>
@@ -251,7 +274,7 @@ export default function Header() {
               {/* Mobile Hamburger */}
               <button
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className="md:hidden flex items-center justify-center size-10 rounded-full text-white hover:bg-white/10 transition-colors"
+                className="lg:hidden flex items-center justify-center size-9 sm:size-10 rounded-full text-white hover:bg-white/10 transition-colors"
               >
                 <span className="material-symbols-outlined">
                   {isMobileMenuOpen ? 'close' : 'menu'}
@@ -260,9 +283,9 @@ export default function Header() {
             </div>
           </div>
 
-          {/* MOBILE MENU (Cập nhật hiển thị giống Desktop) */}
+          {/* MOBILE MENU */}
           {isMobileMenuOpen && (
-            <div className="absolute top-full left-4 right-4 mt-2 p-4 rounded-xl bg-white shadow-xl border border-gray-100 md:hidden animate-in fade-in slide-in-from-top-5 duration-200">
+            <div className="absolute top-full left-0 right-0 sm:left-4 sm:right-4 mt-0 sm:mt-2 p-4 rounded-none sm:rounded-xl bg-white shadow-xl border-t sm:border border-gray-100 lg:hidden animate-in fade-in slide-in-from-top-5 duration-200 max-h-[calc(100vh-80px)] overflow-y-auto">
               <nav className="flex flex-col gap-2">
                 {navItems.map((item) => (
                   <button

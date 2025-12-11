@@ -32,32 +32,29 @@ export default function Home() {
       <Header />
 
       <main className="flex-grow flex flex-col">
-        {/* --- SỬA Ở ĐÂY --- */}
+        {/* HERO SECTION */}
         <div
-          // 1. Thêm "-mt-24": Kéo ảnh lên trên 96px để lấp khoảng trắng của Header
-          // 2. "relative z-0": Để ảnh nằm dưới Header (Header thường là z-50)
-          className="relative w-full bg-cover bg-center bg-no-repeat shadow-md -mt-24 z-0"
+          className="relative w-full bg-cover bg-center bg-no-repeat shadow-md -mt-20 sm:-mt-24 z-0"
           style={{
             backgroundImage: `url(${bgImage})`,
-            height: '700px', // Tăng chiều cao lên chút để bù cho phần bị kéo lên
+            height: 'auto',
+            minHeight: '500px',
           }}
         >
           {/* Overlay */}
           <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-black/70"></div>
 
           {/* Nội dung bên trong */}
-          {/* Thêm pt-40: Đẩy nội dung xuống sâu hơn vì khung ảnh đã bị kéo lên trên */}
-          <div className="relative h-full flex flex-col justify-end pb-20 pt-40 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            {/* ... Phần nội dung bên trong giữ nguyên ... */}
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
+          <div className="relative h-full flex flex-col justify-end pb-12 sm:pb-20 pt-32 sm:pt-40 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 sm:gap-8">
               {/* Title & Description */}
               <div className="max-w-2xl">
-                <span className="inline-block py-1 px-3 rounded-full bg-cyan-500/80 text-white text-xs font-bold mb-4 backdrop-blur-sm border border-cyan-200/50 shadow-[0_0_15px_rgba(34,211,238,0.5)]">
+                <span className="inline-block py-1 px-3 rounded-full bg-cyan-500/80 text-white text-xs font-bold mb-3 sm:mb-4 backdrop-blur-sm border border-cyan-200/50 shadow-[0_0_15px_rgba(34,211,238,0.5)]">
                   HẢI SẢN TƯƠI SỐNG
                 </span>
 
                 {/* TIÊU ĐỀ CHÍNH */}
-                <h1 className="font-display text-5xl md:text-7xl font-extrabold leading-tight mb-4 bg-gradient-to-br from-white via-cyan-100 to-blue-200 bg-clip-text text-transparent drop-shadow-[0_4px_3px_rgba(0,0,0,0.4)]">
+                <h1 className="font-display text-3xl sm:text-5xl md:text-7xl font-extrabold leading-tight mb-3 sm:mb-4 bg-gradient-to-br from-white via-cyan-100 to-blue-200 bg-clip-text text-transparent drop-shadow-[0_4px_3px_rgba(0,0,0,0.4)]">
                   Vị Ngon <br />
                   <span className="text-cyan-300 drop-shadow-[0_0_10px_rgba(34,211,238,0.8)]">
                     Từ Biển Cả
@@ -65,19 +62,17 @@ export default function Home() {
                 </h1>
 
                 {/* DÒNG MÔ TẢ */}
-                <p className="text-cyan-50 text-lg font-medium leading-relaxed drop-shadow-md border-l-4 border-cyan-400 pl-4 bg-black/10 backdrop-blur-sm py-2 rounded-r-lg">
+                <p className="text-cyan-50 text-sm sm:text-lg font-medium leading-relaxed drop-shadow-md border-l-4 border-cyan-400 pl-3 sm:pl-4 bg-black/10 backdrop-blur-sm py-2 rounded-r-lg">
                   Cam kết nguồn gốc rõ ràng, đánh bắt trong ngày và giao hàng
                   siêu tốc.
                 </p>
               </div>
-
-              {/* Search Bar */}
             </div>
           </div>
         </div>
 
-        {/* 2. PRODUCT LIST */}
-        <div className="relative z-10 px-4 sm:px-6 lg:px-8 -mt-16 pb-12">
+        {/* PRODUCT LIST */}
+        <div className="relative z-10 px-3 sm:px-4 md:px-6 lg:px-8 -mt-8 sm:-mt-16 pb-8 sm:pb-12">
           <div className="mx-auto max-w-7xl">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
               {/* Category Menu - Left Sidebar */}
@@ -87,16 +82,16 @@ export default function Home() {
 
               {/* Product List - Right Content */}
               <div className="md:col-span-3">
-                <div className="bg-white rounded-[2.5rem] shadow-xl border border-slate-100 p-8 md:p-12">
-                  <div className="flex items-center justify-between mb-10 border-b border-slate-100 pb-6">
-                    <div className="flex items-center gap-4">
-                      <div className="p-3 bg-blue-50 text-blue-600 rounded-2xl">
-                        <span className="material-symbols-outlined text-3xl">
+                <div className="bg-white rounded-2xl sm:rounded-[2.5rem] shadow-xl border border-slate-100 p-4 sm:p-6 md:p-8 lg:p-12">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 sm:mb-10 border-b border-slate-100 pb-4 sm:pb-6 gap-3">
+                    <div className="flex items-center gap-3 sm:gap-4">
+                      <div className="p-2 sm:p-3 bg-blue-50 text-blue-600 rounded-xl sm:rounded-2xl">
+                        <span className="material-symbols-outlined text-2xl sm:text-3xl">
                           water_drop
                         </span>
                       </div>
                       <div>
-                        <h2 className="text-2xl font-bold text-slate-900">
+                        <h2 className="text-lg sm:text-2xl font-bold text-slate-900">
                           {selectedCategory
                             ? selectedCategory.ten_danh_muc
                             : 'Sản phẩm nổi bật'}

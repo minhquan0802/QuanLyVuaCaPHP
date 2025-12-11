@@ -82,16 +82,16 @@ export default function ProductList({ categoryId = false, search = false }) {
   };
 
   return (
-    <div className="w-full max-w-7xl mx-auto px-4 py-8">
+    <div className="w-full mx-auto">
       {loading ? (
         // Loading State
-        <div className="flex flex-col items-center justify-center py-20 text-blue-500">
-          <div className="size-10 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mb-4"></div>
-          <p>Đang tải danh sách hải sản...</p>
+        <div className="flex flex-col items-center justify-center py-12 sm:py-20 text-blue-500">
+          <div className="size-8 sm:size-10 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mb-4"></div>
+          <p className="text-sm sm:text-base">Đang tải danh sách hải sản...</p>
         </div>
       ) : (
         // Grid Layout Wrapper
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
           {productList.length > 0 ? (
             productList.map((product) => {
               // Map các trường dữ liệu từ API của bạn
@@ -105,10 +105,10 @@ export default function ProductList({ categoryId = false, search = false }) {
                 <div
                   key={id}
                   onClick={() => handleProductDetail(id)}
-                  className="group relative flex flex-col bg-white rounded-2xl shadow-sm ring-1 ring-slate-200 hover:shadow-xl hover:shadow-blue-100 hover:-translate-y-1 transition-all duration-300 overflow-hidden cursor-pointer h-full"
+                  className="group relative flex flex-col bg-white rounded-xl sm:rounded-2xl shadow-sm ring-1 ring-slate-200 hover:shadow-xl hover:shadow-blue-100 hover:-translate-y-1 transition-all duration-300 overflow-hidden cursor-pointer h-full"
                 >
                   {/* Image Container */}
-                  <div className="aspect-[4/3] w-full overflow-hidden bg-slate-100 relative">
+                  <div className="aspect-square sm:aspect-[4/3] w-full overflow-hidden bg-slate-100 relative">
                     <div
                       className="w-full h-full bg-center bg-cover transition-transform duration-700 group-hover:scale-110"
                       style={{ backgroundImage: `url("${image}")` }}
@@ -118,51 +118,52 @@ export default function ProductList({ categoryId = false, search = false }) {
 
                     {/* Badge Tồn kho (Optional) */}
                     {product.so_luong_ton > 0 && (
-                      <div className="absolute top-2 left-2 bg-green-500 text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-sm">
+                      <div className="absolute top-1.5 sm:top-2 left-1.5 sm:left-2 bg-green-500 text-white text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full shadow-sm">
                         Còn hàng
                       </div>
                     )}
                   </div>
 
                   {/* Content */}
-                  <div className="p-4 flex flex-col flex-grow">
+                  <div className="p-2.5 sm:p-4 flex flex-col flex-grow">
                     <div className="flex-grow">
                       {/* Danh mục (nhỏ) */}
                       {product.danh_muc && (
-                        <p className="text-xs text-blue-500 font-bold mb-1 uppercase tracking-wider">
+                        <p className="text-[10px] sm:text-xs text-blue-500 font-bold mb-1 uppercase tracking-wider line-clamp-1">
                           {product.danh_muc.ten_danh_muc}
                         </p>
                       )}
 
-                      <h3 className="font-display text-lg font-bold text-blue-900 leading-tight mb-2 group-hover:text-blue-600 transition-colors line-clamp-2 min-h-[3rem]">
+                      <h3 className="font-display text-sm sm:text-base md:text-lg font-bold text-blue-900 leading-tight mb-1.5 sm:mb-2 group-hover:text-blue-600 transition-colors line-clamp-2 min-h-[2.5rem] sm:min-h-[3rem]">
                         {name}
                       </h3>
 
-                      <p className="text-sm text-slate-500 line-clamp-2 mb-3 min-h-[2.5rem]">
+                      <p className="hidden sm:block text-xs sm:text-sm text-slate-500 line-clamp-2 mb-2 sm:mb-3 min-h-0 sm:min-h-[2.5rem]">
                         {description || 'Mô tả đang cập nhật...'}
                       </p>
 
-                      <p className="font-bold text-blue-600 text-xl mt-auto">
+                      <p className="font-bold text-blue-600 text-base sm:text-lg md:text-xl mt-auto">
                         {price ? (
                           <>
                             {Number(price).toLocaleString('vi-VN')}đ{' '}
-                            <span className="text-sm font-normal text-slate-400">
+                            <span className="text-xs sm:text-sm font-normal text-slate-400">
                               / kg
                             </span>
                           </>
                         ) : (
-                          <span className="text-base text-blue-500">
+                          <span className="text-sm sm:text-base text-blue-500">
                             Liên hệ
                           </span>
                         )}
                       </p>
                     </div>
 
-                    <button className="mt-4 w-full flex items-center justify-center gap-2 py-2.5 rounded-lg bg-blue-600 text-white font-bold text-sm shadow-md shadow-blue-200 hover:bg-blue-700 hover:shadow-lg active:scale-95 transition-all duration-300">
-                      <span className="material-symbols-outlined text-[18px]">
+                    <button className="mt-2.5 sm:mt-4 w-full flex items-center justify-center gap-1.5 sm:gap-2 py-2 sm:py-2.5 rounded-lg bg-blue-600 text-white font-bold text-xs sm:text-sm shadow-md shadow-blue-200 hover:bg-blue-700 hover:shadow-lg active:scale-95 transition-all duration-300">
+                      <span className="material-symbols-outlined text-[16px] sm:text-[18px]">
                         add_shopping_cart
                       </span>
-                      Xem chi tiết
+                      <span className="hidden xs:inline">Xem chi tiết</span>
+                      <span className="xs:hidden">Xem</span>
                     </button>
                   </div>
                 </div>
