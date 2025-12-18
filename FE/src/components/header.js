@@ -8,10 +8,13 @@ export default function Header() {
   const [cartCount, setCartCount] = useState(0);
   const [search, setSearch] = useState('');
   const [user, setUser] = useState(null);
+  const [isSearchExpanded, setIsSearchExpanded] = useState(false);
 
   // --- 1. THÊM STATE & REF CHO DROPDOWN ---
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
+  const searchContainerRef = useRef(null);
+  const searchInputRef = useRef(null);
 
   const isActive = (path) => location.pathname === path;
 
@@ -26,16 +29,33 @@ export default function Header() {
     setIsDropdownOpen(false); // Đóng dropdown khi chuyển trang
   };
 
-  // --- 2. XỬ LÝ CLICK OUTSIDE ĐỂ ĐÓNG DROPDOWN ---
+  // --- 2. XỬ LÝ CLICK OUTSIDE ĐỂ ĐÓNG DROPDOWN & SEARCH ---
   useEffect(() => {
     function handleClickOutside(event) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setIsDropdownOpen(false);
       }
+      // Đóng search bar khi click outside trên mobile
+      if (isSearchExpanded && searchContainerRef.current && !searchContainerRef.current.contains(event.target)) {
+        setIsSearchExpanded(false);
+        setSearch('');
+      }
     }
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [dropdownRef]);
+  }, [dropdownRef, isSearchExpanded]);
+
+  // Reset search expanded state khi resize từ desktop về mobile
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 1024) {
+        setIsSearchExpanded(true); // Luôn expanded trên desktop
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    handleResize(); // Check initial size
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // --- LOAD DATA (Giữ nguyên code cũ của bạn) ---
   useEffect(() => {
@@ -112,38 +132,93 @@ export default function Header() {
               </h2>
             </div>
 
-            {/* SEARCH BAR - Hidden on mobile, visible on lg+ */}
-            <div className="hidden lg:block lg:w-[450px] mx-4">
+            {/* SEARCH BAR - Co dãn theo kích thước màn hình */}
+            <div ref={searchContainerRef} className={`mx-4 relative transition-all duration-300 ${
+              isSearchExpanded ? 'flex-1 lg:flex-none lg:w-[450px]' : 'lg:w-[450px]'
+            }`}>
               <div className="bg-white/10 backdrop-blur-md p-2 rounded-3xl border border-white/20 shadow-2xl">
-                <div className="relative group">
-                  <div className="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
+                <div className="relative group flex items-center">
+                  {/* Search Icon - Always visible */}
+                  <div className="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none z-10">
                     <span className="material-symbols-outlined text-slate-300 group-focus-within:text-blue-400 transition-colors">
                       search
                     </span>
                   </div>
-                  <input
-                    type="text"
-                    value={search}
-                    onChange={(e) => {
-                      setSearch(e.target.value);
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && search.trim()) {
-                        handleProductSearch(search);
-                      }
-                    }}
-                    className="block w-full pl-12 pr-20 py-3 rounded-2xl border-none bg-white/90 text-slate-900 shadow-sm placeholder:text-slate-500 focus:bg-white focus:ring-0 transition-all"
-                    placeholder="Bạn muốn ăn gì hôm nay?"
-                  />
-                  <button
-                    className="absolute right-2 top-2 bottom-2 px-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-colors shadow-lg shadow-blue-600/30 flex items-center gap-1"
-                    onClick={() => handleProductSearch(search)}
-                  >
-                    <span className="material-symbols-outlined text-[18px]">
-                      search
-                    </span>
-                    <span className="hidden xl:inline">Tìm</span>
-                  </button>
+                  
+                  {/* Search Input - Expandable on mobile, always visible on desktop */}
+                  <div className={`relative transition-all duration-300 ${
+                    isSearchExpanded ? 'w-full' : 'w-0 lg:w-full'
+                  } overflow-hidden`}>
+                    <input
+                      ref={searchInputRef}
+                      type="text"
+                      value={search}
+                      onChange={(e) => {
+                        setSearch(e.target.value);
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && search.trim()) {
+                          handleProductSearch(search);
+                        }
+                        if (e.key === 'Escape') {
+                          setIsSearchExpanded(false);
+                          setSearch('');
+                        }
+                      }}
+                      onFocus={() => {
+                        setIsSearchExpanded(true);
+                      }}
+                      className="block w-full pl-12 pr-20 py-3 rounded-2xl border-none bg-white/90 text-slate-900 shadow-sm placeholder:text-slate-500 focus:bg-white focus:ring-0 transition-all"
+                      placeholder="Bạn muốn ăn gì hôm nay?"
+                    />
+                  </div>
+                  
+                  {/* Expand Button - Only on mobile when collapsed */}
+                  {!isSearchExpanded && (
+                    <button
+                      onClick={() => {
+                        setIsSearchExpanded(true);
+                        setTimeout(() => searchInputRef.current?.focus(), 100);
+                      }}
+                      className="lg:hidden flex items-center justify-center size-9 sm:size-10 rounded-full text-white hover:bg-white/20 transition-all duration-300 ml-2 flex-shrink-0"
+                      title="Tìm kiếm"
+                    >
+                      <span className="material-symbols-outlined text-[20px]">
+                        search
+                      </span>
+                    </button>
+                  )}
+                  
+                  {/* Search Button - Always visible on desktop, visible when expanded on mobile */}
+                  <div className={`absolute right-2 top-2 bottom-2 transition-all duration-300 ${
+                    isSearchExpanded ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none lg:opacity-100 lg:pointer-events-auto'
+                  }`}>
+                    <button
+                      className="px-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-colors shadow-lg shadow-blue-600/30 flex items-center gap-1 h-full"
+                      onClick={() => handleProductSearch(search)}
+                    >
+                      <span className="material-symbols-outlined text-[18px]">
+                        search
+                      </span>
+                      <span className="hidden xl:inline">Tìm</span>
+                    </button>
+                  </div>
+                  
+                  {/* Close Button - Only on mobile when expanded */}
+                  {isSearchExpanded && (
+                    <button
+                      onClick={() => {
+                        setIsSearchExpanded(false);
+                        setSearch('');
+                      }}
+                      className="lg:hidden absolute right-14 top-1/2 -translate-y-1/2 p-1 text-slate-600 hover:text-slate-900 transition-colors z-10"
+                      title="Đóng"
+                    >
+                      <span className="material-symbols-outlined text-[20px]">
+                        close
+                      </span>
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
@@ -167,16 +242,6 @@ export default function Header() {
 
             {/* ACTIONS */}
             <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
-              {/* Search icon for mobile/tablet */}
-              <button
-                onClick={() => navigate('/home')}
-                className="lg:hidden flex items-center justify-center size-9 sm:size-10 rounded-full text-white hover:bg-white/20 transition-all duration-300"
-                title="Tìm kiếm"
-              >
-                <span className="material-symbols-outlined text-[20px]">
-                  search
-                </span>
-              </button>
 
               {/* --- 5. NÚT TÀI KHOẢN + DROPDOWN --- */}
               <div className="relative" ref={dropdownRef}>

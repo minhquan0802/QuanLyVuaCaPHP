@@ -5,9 +5,7 @@ import Header from '../components/header';
 import ProductList from '../components/product-list';
 
 export default function ProductSearch() {
-  const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [quantity, setQuantity] = useState(1);
 
   // Lấy ID từ URL (ví dụ: /product/2)
   const { product_id } = useParams();
@@ -29,10 +27,8 @@ export default function ProductSearch() {
 
         const data = await res.json();
         console.log('Dữ liệu sản phẩm:', data);
-        setProduct(data);
       } catch (error) {
         console.error('Lỗi tải dữ liệu:', error);
-        setProduct(null);
       } finally {
         setLoading(false);
       }

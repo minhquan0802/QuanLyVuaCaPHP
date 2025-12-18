@@ -7,7 +7,7 @@ import { useNavigate } from 'react-router-dom';
 
 // 1. KHAI BÁO ẢNH NỀN (Bạn có thể thay link này bằng link ảnh hải sản khác)
 const bgImage = 'https://news.clemson.edu/wp-content/uploads/2023/06/ocean.jpg';
-
+const bgVideo = 'https://r5---sn-i3belne6.googlevideo.com/videoplayback?expire=1766050089&ei=yXRDadXZNsHs6dsP_cmK0QU&ip=176.1.219.215&id=o-AE1paGHKYHaFnFX1eUj8HdEs1ihoGf601M8CuMEMdHnP&itag=401&source=youtube&requiressl=yes&xpc=EgVo2aDSNQ%3D%3D&bui=AYUSA3CWAeJPAiv5hwJumSmY4teDlV9jIEKVesBQwYa44PTP4Qi_ckc5ca_xZArKkBorOLqZpYv4xomI&spc=wH4Qqxf1rU7Y&vprv=1&svpuc=1&mime=video%2Fmp4&rqh=1&gir=yes&clen=3968671232&dur=2394.499&lmt=1759527039398209&keepalive=yes&fexp=51552689,51565115,51565682,51580968&c=ANDROID&txp=443G534&sparams=expire%2Cei%2Cip%2Cid%2Citag%2Csource%2Crequiressl%2Cxpc%2Cbui%2Cspc%2Cvprv%2Csvpuc%2Cmime%2Crqh%2Cgir%2Cclen%2Cdur%2Clmt&sig=AJfQdSswRAIgJqtrA4Qg0Uyj3MH4yO9YtJC_lLb0g7Y5kUX0l8dUrnkCIHvj-M9LPGg_hKdO2CQIz6RyO0ZXDZvID4xngZeVTwBT&cps=123&rm=sn-42u-nbosy7k,sn-npo6z7e&rrc=79,104&req_id=abb4e3c407f3a3ee&rms=nxu,au&redirect_counter=2&cms_redirect=yes&cmsv=e&ipbypass=yes&met=1766028509,&mh=Ax&mip=14.161.68.3&mm=30&mn=sn-i3belne6&ms=nxu&mt=1766028274&mv=m&mvi=5&pl=22&lsparams=cps,ipbypass,met,mh,mip,mm,mn,ms,mv,mvi,pl,rms&lsig=APaTxxMwRQIgRgb2y0_4BuSFJ1on_IYABtJQCTDwffaw7SFotmwWJDsCIQDuvuxRl7l4rHGGbNE246pSmI1RieG4YG3RKhbjQGVJqQ%3D%3D'; 
 export default function Home() {
   const navigate = useNavigate();
   const [selectedCategory, setSelectedCategory] = useState(null);
@@ -34,13 +34,23 @@ export default function Home() {
       <main className="flex-grow flex flex-col">
         {/* HERO SECTION */}
         <div
-          className="relative w-full bg-cover bg-center bg-no-repeat shadow-md -mt-20 sm:-mt-24 z-0"
+          className="relative w-full overflow-hidden shadow-md -mt-20 sm:-mt-24 z-0"
           style={{
-            backgroundImage: `url(${bgImage})`,
             height: 'auto',
             minHeight: '500px',
           }}
         >
+          <video
+            autoPlay
+            loop
+            muted
+            playsInline
+            className="absolute top-0 left-0 w-full h-full object-cover"
+          >
+            <source src={bgVideo} type="video/mp4" />
+            {/* Fallback cho trình duyệt không hỗ trợ video */}
+            Your browser does not support the video tag.
+          </video>
           {/* Overlay */}
           <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-black/70"></div>
 
