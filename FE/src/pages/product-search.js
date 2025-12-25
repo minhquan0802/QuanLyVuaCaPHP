@@ -20,7 +20,6 @@ export default function ProductSearch() {
         // --- THAY ĐỔI 1: Gọi đúng API cho bảng San_pham ---
         // Lưu ý: Kiểm tra lại trong Spring Boot Controller xem bạn map là /Sanpham hay /products
         const res = await fetch(APP_BASE_URL);
-
         if (!res.ok) {
           throw new Error('Lỗi kết nối server');
         }

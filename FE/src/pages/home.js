@@ -7,7 +7,7 @@ import { useNavigate } from 'react-router-dom';
 
 // 1. KHAI BÁO ẢNH NỀN (Bạn có thể thay link này bằng link ảnh hải sản khác)
 const bgImage = 'https://news.clemson.edu/wp-content/uploads/2023/06/ocean.jpg';
-const bgVideo = 'https://r5---sn-i3belne6.googlevideo.com/videoplayback?expire=1766050089&ei=yXRDadXZNsHs6dsP_cmK0QU&ip=176.1.219.215&id=o-AE1paGHKYHaFnFX1eUj8HdEs1ihoGf601M8CuMEMdHnP&itag=401&source=youtube&requiressl=yes&xpc=EgVo2aDSNQ%3D%3D&bui=AYUSA3CWAeJPAiv5hwJumSmY4teDlV9jIEKVesBQwYa44PTP4Qi_ckc5ca_xZArKkBorOLqZpYv4xomI&spc=wH4Qqxf1rU7Y&vprv=1&svpuc=1&mime=video%2Fmp4&rqh=1&gir=yes&clen=3968671232&dur=2394.499&lmt=1759527039398209&keepalive=yes&fexp=51552689,51565115,51565682,51580968&c=ANDROID&txp=443G534&sparams=expire%2Cei%2Cip%2Cid%2Citag%2Csource%2Crequiressl%2Cxpc%2Cbui%2Cspc%2Cvprv%2Csvpuc%2Cmime%2Crqh%2Cgir%2Cclen%2Cdur%2Clmt&sig=AJfQdSswRAIgJqtrA4Qg0Uyj3MH4yO9YtJC_lLb0g7Y5kUX0l8dUrnkCIHvj-M9LPGg_hKdO2CQIz6RyO0ZXDZvID4xngZeVTwBT&cps=123&rm=sn-42u-nbosy7k,sn-npo6z7e&rrc=79,104&req_id=abb4e3c407f3a3ee&rms=nxu,au&redirect_counter=2&cms_redirect=yes&cmsv=e&ipbypass=yes&met=1766028509,&mh=Ax&mip=14.161.68.3&mm=30&mn=sn-i3belne6&ms=nxu&mt=1766028274&mv=m&mvi=5&pl=22&lsparams=cps,ipbypass,met,mh,mip,mm,mn,ms,mv,mvi,pl,rms&lsig=APaTxxMwRQIgRgb2y0_4BuSFJ1on_IYABtJQCTDwffaw7SFotmwWJDsCIQDuvuxRl7l4rHGGbNE246pSmI1RieG4YG3RKhbjQGVJqQ%3D%3D'; 
+const bgVideo = 'https://rr3---sn-npoeens7.googlevideo.com/videoplayback?expire=1766654234&ei=uqxMabfpCbHB9fwP8pGggQ0&ip=116.109.181.68&id=o-AFAvK8ERQYU4pOz5u5X1ri8q5rcEUXd9hTSzbAG3ndRW&itag=315&source=youtube&requiressl=yes&xpc=EgVo2aDSNQ%3D%3D&cps=0&bui=AYUSA3DSGcMjvmjAzH2vR8VW30lI7S6NZsn0or--au-Hos5LJLSw_1j0V7u9eZtlR_kpKN_8YhLeKfJV&spc=wH4Qq0Dtli8d&vprv=1&svpuc=1&mime=video%2Fwebm&rqh=1&gir=yes&clen=101261641287&dur=42898.516&lmt=1714787782426712&keepalive=yes&fexp=51552689,51565116,51565681,51580968&c=ANDROID&txp=730F224&sparams=expire%2Cei%2Cip%2Cid%2Citag%2Csource%2Crequiressl%2Cxpc%2Cbui%2Cspc%2Cvprv%2Csvpuc%2Cmime%2Crqh%2Cgir%2Cclen%2Cdur%2Clmt&sig=AJfQdSswRgIhAP8NagZSju-X5fr20I__pUPdRPMCI0MxC8H1ZHLXa33YAiEAkPwxoVLIxI1aAJqEgMHzChUf5VAJoVpWABdV0Ht_MVI%3D&rm=sn-8pxuuxa-nbozz7r,sn-8pxuuxa-nbo6l7r,sn-npods7l&rrc=79,79,104&req_id=31aa86117491a3ee&rms=nxu,au&redirect_counter=3&cms_redirect=yes&cmsv=e&ipbypass=yes&met=1766632645,&mh=pX&mip=183.80.16.160&mm=30&mn=sn-npoeens7&ms=nxu&mt=1766632113&mv=m&mvi=3&pl=24&lsparams=cps,ipbypass,met,mh,mip,mm,mn,ms,mv,mvi,pl,rms&lsig=APaTxxMwRAIgNLoDLa9J3Cytj17ya00_YirUbLUDCtjWJgtDQ6QWFpgCIBMbSVGACALBN5C6tUl2q-uoKx6CNaKCGhJCiWdHXcvY'; 
 export default function Home() {
   const navigate = useNavigate();
   const [selectedCategory, setSelectedCategory] = useState(null);
@@ -37,7 +37,7 @@ export default function Home() {
           className="relative w-full overflow-hidden shadow-md -mt-20 sm:-mt-24 z-0"
           style={{
             height: 'auto',
-            minHeight: '500px',
+            minHeight: '600px',
           }}
         >
           <video

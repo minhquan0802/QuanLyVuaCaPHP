@@ -20,7 +20,7 @@ export default function Header() {
 
   const navItems = [
     { label: 'Trang chủ', path: '/home' },
-    { label: 'Sản phẩm', path: '/product-list' },
+
   ];
 
   const handleNavigation = (path) => {
